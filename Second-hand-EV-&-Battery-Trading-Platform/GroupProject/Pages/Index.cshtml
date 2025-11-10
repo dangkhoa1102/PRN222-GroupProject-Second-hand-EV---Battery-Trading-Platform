@@ -4,7 +4,43 @@
     ViewData["Title"] = "Home page";
 }
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
+@using Microsoft.AspNetCore.Http
+@{
+    var fullName = HttpContext.Session.GetString("FullName");
+}
+
+<div class="page-header">
+    <h1>Xin chào @(!string.IsNullOrWhiteSpace(fullName) ? fullName : "khách hàng")</h1>
+    <span class="text-muted">Chọn hành động để tiếp tục giao dịch của bạn</span>
+</div>
+
+<div class="row g-4">
+    <div class="col-lg-6">
+        <div class="card-modern h-100">
+            <h2 class="h4 mb-3 text-success">Khám phá thị trường</h2>
+            <p>
+                Xem các tin đăng mua bán pin và xe điện đã qua sử dụng từ cộng đồng.
+                Chúng tôi giúp bạn kết nối nhanh chóng, minh bạch và an toàn.
+            </p>
+            <ul class="list-unstyled small mb-0">
+                <li class="mb-2">• Bộ lọc thông minh theo dung lượng pin, giá bán</li>
+                <li class="mb-2">• Đánh giá người bán rõ ràng</li>
+                <li>• Hệ thống tin nhắn đơn giản, bảo mật</li>
+            </ul>
+        </div>
+    </div>
+    <div class="col-lg-6">
+        <div class="card-modern h-100">
+            <h2 class="h4 mb-3 text-success">Bắt đầu đăng bán</h2>
+            <p>
+                Chỉ với vài bước, bạn đã có thể tạo tin đăng và tiếp cận hàng trăm khách hàng tiềm năng.
+            </p>
+            <ol class="small ps-3">
+                <li>Chuẩn bị thông tin chi tiết và hình ảnh sản phẩm</li>
+                <li>Tạo tin đăng với mức giá hấp dẫn</li>
+                <li>Nhận thông báo khi có người quan tâm</li>
+            </ol>
+            <a class="btn btn-primary mt-3" href="#">Tạo tin đăng ngay</a>
+        </div>
+    </div>
 </div>

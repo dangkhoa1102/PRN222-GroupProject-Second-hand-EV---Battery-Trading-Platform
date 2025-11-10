@@ -1,4 +1,10 @@
-﻿<!DOCTYPE html>
+﻿@using Microsoft.AspNetCore.Http
+@{
+    var userId = Context.Session.GetInt32("UserId");
+    var fullName = Context.Session.GetString("FullName");
+    var isLoggedIn = userId.HasValue;
+}
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="utf-8" />
@@ -9,36 +15,71 @@
     <link rel="stylesheet" href="~/GroupProject.styles.css" asp-append-version="true" />
 </head>
 <body>
-    <header>
-        <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3">
+    <header class="shadow-sm">
+        <nav class="navbar navbar-expand-lg navbar-dark">
             <div class="container">
-                <a class="navbar-brand" asp-area="" asp-page="/Index">GroupProject</a>
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
+                <a class="navbar-brand fw-bold" asp-area="" asp-page="/Index">
+                    <span class="me-2">⚡</span>EV Trading
+                </a>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNavbar" aria-controls="mainNavbar"
                         aria-expanded="false" aria-label="Toggle navigation">
                     <span class="navbar-toggler-icon"></span>
                 </button>
-                <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
-                    <ul class="navbar-nav flex-grow-1">
+                <div class="collapse navbar-collapse" id="mainNavbar">
+                    <ul class="navbar-nav me-auto mb-2 mb-lg-0">
                         <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-page="/Index">Home</a>
+                            <a class="nav-link @(Context.Request.Path.HasValue && Context.Request.Path.Value!.Equals("/", StringComparison.OrdinalIgnoreCase) ? "active" : string.Empty)"
+                               asp-area="" asp-page="/Index">Trang chủ</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-page="/Privacy">Privacy</a>
+                            <a class="nav-link" asp-area="" asp-page="/Privacy">Chính sách</a>
                         </li>
                     </ul>
+                    <div class="d-flex align-items-center gap-3">
+                        @if (isLoggedIn)
+                        {
+                            <div class="dropdown user-menu">
+                                <button class="btn btn-outline-light dropdown-toggle d-flex align-items-center gap-2"
+                                        type="button" id="userMenuDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                                    <span class="user-avatar">@(!string.IsNullOrWhiteSpace(fullName) ? fullName![0].ToString().ToUpperInvariant() : "U")</span>
+                                    <span>@(!string.IsNullOrWhiteSpace(fullName) ? fullName : "Khách")</span>
+                                </button>
+                                <ul class="dropdown-menu dropdown-menu-end shadow user-menu-dropdown" aria-labelledby="userMenuDropdown">
+                                    <li class="dropdown-header">
+                                        <div class="fw-semibold">@(!string.IsNullOrWhiteSpace(fullName) ? fullName : "Khách")</div>
+                                        <div class="small text-muted">@Context.Session.GetString("Email")</div>
+                                    </li>
+                                    <li><hr class="dropdown-divider" /></li>
+                                    <li>
+                                        <form asp-page="/Account/Logout" method="post" class="d-inline">
+                                            <button type="submit" class="dropdown-item text-danger fw-semibold">
+                                                Đăng xuất
+                                            </button>
+                                        </form>
+                                    </li>
+                                </ul>
+                            </div>
+                        }
+                        else
+                        {
+                            <a class="btn btn-outline-light" asp-page="/Account/Login">Đăng nhập</a>
+                            <a class="btn btn-primary" asp-page="/Account/Register">Đăng ký</a>
+                        }
+                    </div>
                 </div>
             </div>
         </nav>
     </header>
-    <div class="container">
+    <div class="container py-4">
         <main role="main" class="pb-3">
             @RenderBody()
         </main>
     </div>
 
-    <footer class="border-top footer text-muted">
-        <div class="container">
-            &copy; 2025 - GroupProject - <a asp-area="" asp-page="/Privacy">Privacy</a>
+    <footer class="footer mt-auto text-muted">
+        <div class="container d-flex flex-column flex-md-row justify-content-between align-items-center gap-2">
+            <span>&copy; @DateTime.Now.Year - EV Trading Platform</span>
+            <span class="small">Kết nối người mua &amp; bán pin, xe điện đã qua sử dụng</span>
         </div>
     </footer>
 
