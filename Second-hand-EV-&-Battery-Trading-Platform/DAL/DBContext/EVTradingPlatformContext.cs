@@ -146,7 +146,8 @@ public partial class EVTradingPlatformContext : DbContext
                 .IsRequired()
                 .HasMaxLength(100);
             entity.Property(e => e.IsActive).HasDefaultValue(true);
-            entity.Property(e => e.PasswordHash)
+            entity.Property(e => e.Password)
+                .HasColumnName("PasswordHash")
                 .IsRequired()
                 .HasMaxLength(255);
             entity.Property(e => e.PhoneNumber).HasMaxLength(20);

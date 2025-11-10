@@ -10,4 +10,10 @@
     <ProjectReference Include="..\DAL\DAL.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="DTOs\" />
+    <Folder Include="Constants\" />
+    <Folder Include="Services\" />
+  </ItemGroup>
+
 </Project>
