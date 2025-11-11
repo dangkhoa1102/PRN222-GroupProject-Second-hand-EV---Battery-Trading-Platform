@@ -65,6 +65,16 @@ public partial class EVTradingPlatformContext : DbContext
             entity.Property(e => e.Condition)
                 .IsRequired()
                 .HasMaxLength(50);
+            entity.Property(e => e.Status)
+                .IsRequired()
+                .HasMaxLength(30)
+                .HasDefaultValue("Draft");
+            entity.Property(e => e.IsActive)
+                .HasDefaultValue(true);
+            entity.Property(e => e.ModerationNote).HasMaxLength(500);
+            entity.Property(e => e.ApprovedDate).HasColumnType("datetime");
+            entity.Property(e => e.SubmittedDate).HasColumnType("datetime");
+            entity.Property(e => e.PublishedDate).HasColumnType("datetime");
             entity.Property(e => e.CreatedDate)
                 .HasDefaultValueSql("(getdate())")
                 .HasColumnType("datetime");
@@ -79,6 +89,10 @@ public partial class EVTradingPlatformContext : DbContext
                 .HasForeignKey(d => d.SellerId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK__Batteries__Selle__5629CD9C");
+
+            entity.HasOne(d => d.ApprovedByNavigation).WithMany(p => p.BatteryApprovals)
+                .HasForeignKey(d => d.ApprovedBy)
+                .HasConstraintName("FK_Batteries_ApprovedBy");
         });
 
         modelBuilder.Entity<Order>(entity =>
@@ -170,6 +184,16 @@ public partial class EVTradingPlatformContext : DbContext
             entity.Property(e => e.Condition)
                 .IsRequired()
                 .HasMaxLength(50);
+            entity.Property(e => e.Status)
+                .IsRequired()
+                .HasMaxLength(30)
+                .HasDefaultValue("Draft");
+            entity.Property(e => e.IsActive)
+                .HasDefaultValue(true);
+            entity.Property(e => e.ModerationNote).HasMaxLength(500);
+            entity.Property(e => e.ApprovedDate).HasColumnType("datetime");
+            entity.Property(e => e.SubmittedDate).HasColumnType("datetime");
+            entity.Property(e => e.PublishedDate).HasColumnType("datetime");
             entity.Property(e => e.CreatedDate)
                 .HasDefaultValueSql("(getdate())")
                 .HasColumnType("datetime");
@@ -186,6 +210,10 @@ public partial class EVTradingPlatformContext : DbContext
                 .HasForeignKey(d => d.SellerId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK__Vehicles__Seller__5165187F");
+
+            entity.HasOne(d => d.ApprovedByNavigation).WithMany(p => p.VehicleApprovals)
+                .HasForeignKey(d => d.ApprovedBy)
+                .HasConstraintName("FK_Vehicles_ApprovedBy");
         });
 
         OnModelCreatingPartial(modelBuilder);

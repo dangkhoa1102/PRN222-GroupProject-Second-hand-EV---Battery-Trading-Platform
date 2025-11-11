@@ -1,0 +1,111 @@
+@page "{id?}"
+@model GroupProject.Pages.VehicleListings.UpsertModel
+@{
+    ViewData["Title"] = Model.IsEdit ? "Chỉnh sửa tin đăng" : "Tạo tin đăng mới";
+}
+
+<div class="listing-container">
+    <div class="listing-card">
+        <div class="listing-card__header">
+            <span class="listing-icon">🚗</span>
+            <div>
+                <h1 class="listing-card__title">@ViewData["Title"]</h1>
+                <p class="listing-card__subtitle">Nhập đầy đủ thông tin để tin đăng của bạn nổi bật và được phê duyệt nhanh chóng.</p>
+            </div>
+        </div>
+
+        @if (!string.IsNullOrEmpty(Model.ErrorMessage))
+        {
+            <div class="alert alert-danger mb-4">@Model.ErrorMessage</div>
+        }
+
+        <div asp-validation-summary="ModelOnly" class="alert alert-danger mb-4" role="alert"></div>
+
+        <form method="post" enctype="multipart/form-data" class="needs-validation" novalidate>
+            <input type="hidden" asp-for="Input.ImageUrl" />
+            <div class="form-section-title">Thông tin tổng quan</div>
+            <div class="form-grid two-col">
+                <div class="input-field">
+                    <label asp-for="Input.Brand" class="form-label"></label>
+                    <input asp-for="Input.Brand" class="form-control" placeholder="VD: Tesla, VinFast..." />
+                    <span asp-validation-for="Input.Brand" class="text-danger small"></span>
+                </div>
+                <div class="input-field">
+                    <label asp-for="Input.Model" class="form-label"></label>
+                    <input asp-for="Input.Model" class="form-control" placeholder="Model S 2019..." />
+                    <span asp-validation-for="Input.Model" class="text-danger small"></span>
+                </div>
+                <div class="input-field">
+                    <label asp-for="Input.Year" class="form-label"></label>
+                    <input asp-for="Input.Year" class="form-control" placeholder="2020" />
+                    <span asp-validation-for="Input.Year" class="text-danger small"></span>
+                </div>
+                <div class="input-field">
+                    <label asp-for="Input.BatteryCapacity" class="form-label"></label>
+                    <input asp-for="Input.BatteryCapacity" class="form-control" placeholder="100 kWh" />
+                    <span asp-validation-for="Input.BatteryCapacity" class="text-danger small"></span>
+                </div>
+                <div class="input-field">
+                    <label class="form-label" for="PriceInput">Giá bán mong muốn</label>
+                    <input class="form-control" id="PriceInput" name="PriceInput" value="@Model.PriceInput" placeholder="Nhập giá mong muốn (vd: 9000000.00)" />
+                    <span asp-validation-for="PriceInput" class="text-danger small"></span>
+                    <div class="form-helper">Nên tham khảo giá thị trường để dễ phê duyệt.</div>
+                </div>
+                <div class="input-field">
+                    <label asp-for="Input.Condition" class="form-label"></label>
+                    <input asp-for="Input.Condition" class="form-control" placeholder="Mới 90%, bảo dưỡng định kỳ..." />
+                    <span asp-validation-for="Input.Condition" class="text-danger small"></span>
+                </div>
+                <div class="input-field">
+                    <label asp-for="Input.Mileage" class="form-label"></label>
+                    <input asp-for="Input.Mileage" class="form-control" placeholder="Số km đã đi" />
+                    <span asp-validation-for="Input.Mileage" class="text-danger small"></span>
+                </div>
+            </div>
+
+            <div class="form-section-title">Mô tả & hình ảnh</div>
+            <div class="form-grid">
+                <div class="input-field">
+                    <label asp-for="Input.Description" class="form-label"></label>
+                    <textarea asp-for="Input.Description" class="form-control" rows="4" placeholder="Nêu rõ tình trạng, lịch bảo dưỡng, phụ kiện đi kèm..."></textarea>
+                    <span asp-validation-for="Input.Description" class="text-danger small"></span>
+                </div>
+                <div class="input-field">
+                    <label class="form-label" asp-for="ImageFile">Ảnh minh họa</label>
+                    <input asp-for="ImageFile" class="form-control" type="file" accept="image/*" />
+                    <span asp-validation-for="ImageFile" class="text-danger small"></span>
+                    <div class="form-helper">Chọn ảnh rõ nét, chụp nhiều góc độ. Ảnh tối đa 5MB.</div>
+                    @if (!string.IsNullOrEmpty(Model.Input.ImageUrl))
+                    {
+                        <div class="form-helper mt-2">Ảnh hiện tại:</div>
+                        <img src="@Model.Input.ImageUrl" alt="Ảnh hiện tại" class="listing-preview" />
+                    }
+                </div>
+            </div>
+
+            <div class="listing-footer">
+                <a asp-page="Index" class="btn btn-secondary">Quay lại danh sách</a>
+                <button type="submit" class="btn btn-primary px-4">Lưu tin đăng</button>
+            </div>
+        </form>
+    </div>
+
+    <aside class="listing-aside">
+        <h2>Nhắc bạn chuẩn bị</h2>
+        <ul>
+            <li>Giấy tờ xe chính chủ, lịch sử bảo dưỡng để tăng độ tin cậy.</li>
+            <li>Ảnh chụp xe ngoài trời, có ánh sáng tự nhiên.</li>
+            <li>Mô tả rõ ràng tình trạng pin, quãng đường di chuyển.</li>
+            <li>Đảm bảo ảnh tải lên không mờ, không chứa thông tin nhạy cảm.</li>
+        </ul>
+
+        <div class="tip-card">
+            <strong>Tip về giá:</strong> Ghi nhận các tin tương tự giúp bạn đặt giá cạnh tranh và được duyệt nhanh.
+        </div>
+    </aside>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}
+

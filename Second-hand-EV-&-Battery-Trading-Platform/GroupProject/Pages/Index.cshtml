@@ -3,44 +3,161 @@
 @{
     ViewData["Title"] = "Home page";
 }
-
-@using Microsoft.AspNetCore.Http
-@{
-    var fullName = HttpContext.Session.GetString("FullName");
-}
-
-<div class="page-header">
-    <h1>Xin chào @(!string.IsNullOrWhiteSpace(fullName) ? fullName : "khách hàng")</h1>
-    <span class="text-muted">Chọn hành động để tiếp tục giao dịch của bạn</span>
-</div>
-
-<div class="row g-4">
-    <div class="col-lg-6">
-        <div class="card-modern h-100">
-            <h2 class="h4 mb-3 text-success">Khám phá thị trường</h2>
-            <p>
-                Xem các tin đăng mua bán pin và xe điện đã qua sử dụng từ cộng đồng.
-                Chúng tôi giúp bạn kết nối nhanh chóng, minh bạch và an toàn.
-            </p>
-            <ul class="list-unstyled small mb-0">
-                <li class="mb-2">• Bộ lọc thông minh theo dung lượng pin, giá bán</li>
-                <li class="mb-2">• Đánh giá người bán rõ ràng</li>
-                <li>• Hệ thống tin nhắn đơn giản, bảo mật</li>
-            </ul>
+<section class="hero-home text-center">
+    <div class="hero-content">
+        <h1 class="display-5 fw-bold text-success mb-3">Nền tảng giao dịch xe &amp; pin điện đã qua sử dụng</h1>
+        <p class="lead text-muted mb-4">
+            Kết nối người mua và người bán thông minh, minh bạch và an toàn. Khởi đầu hành trình xanh của bạn ngay hôm nay.
+        </p>
+        <div class="hero-actions d-flex justify-content-center gap-3 flex-wrap">
+            <a class="btn btn-primary" asp-page="/VehicleListings/Upsert">Đăng tin xe</a>
+            <a class="btn btn-outline-primary" asp-page="/BatteryListings/Upsert">Đăng tin pin</a>
         </div>
     </div>
-    <div class="col-lg-6">
-        <div class="card-modern h-100">
-            <h2 class="h4 mb-3 text-success">Bắt đầu đăng bán</h2>
-            <p>
-                Chỉ với vài bước, bạn đã có thể tạo tin đăng và tiếp cận hàng trăm khách hàng tiềm năng.
-            </p>
-            <ol class="small ps-3">
-                <li>Chuẩn bị thông tin chi tiết và hình ảnh sản phẩm</li>
-                <li>Tạo tin đăng với mức giá hấp dẫn</li>
-                <li>Nhận thông báo khi có người quan tâm</li>
-            </ol>
-            <a class="btn btn-primary mt-3" href="#">Tạo tin đăng ngay</a>
+</section>
+
+<section class="features py-5">
+    <div class="row g-4">
+        @* <div class="col-md-4">
+            <div class="feature-card">
+                <span class="feature-icon">🔍</span>
+                <h3>Bộ lọc thông minh</h3>
+                <p>Tìm kiếm theo hãng, dung lượng pin, giá bán, tình trạng nhanh chóng.</p>
+            </div>
         </div>
+        <div class="col-md-4">
+            <div class="feature-card">
+                <span class="feature-icon">🛡️</span>
+                <h3>Kiểm duyệt bảo đảm</h3>
+                <p>Mọi tin đăng đều được staff phê duyệt trước khi hiển thị công khai.</p>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="feature-card">
+                <span class="feature-icon">🤝</span>
+                <h3>Kết nối nhanh chóng</h3>
+                <p>Thông tin người bán rõ ràng để bạn liên hệ ngay khi tìm được món phù hợp.</p>
+            </div>
+        </div> *@
     </div>
-</div>
+</section>
+
+<section class="market-section">
+    <div class="market-section__header">
+        <div>
+            <h2 class="market-section__title">Tin xe điện đã duyệt</h2>
+            <p class="text-muted mb-0 small">Các tin đang hiển thị công khai cho khách hàng.</p>
+        </div>
+        <span class="market-section__count">@Model.ApprovedVehicles.Count tin</span>
+    </div>
+
+    @if (Model.ApprovedVehicles.Any())
+    {
+        <div class="market-grid">
+            @foreach (var vehicle in Model.ApprovedVehicles)
+            {
+                <article class="market-card">
+                    <div class="market-card__media">
+                        @if (!string.IsNullOrWhiteSpace(vehicle.ImageUrl))
+                        {
+                            <img src="@vehicle.ImageUrl" alt="Ảnh xe @vehicle.Brand @vehicle.Model" />
+                        }
+                        else
+                        {
+                            <div class="market-card__media--placeholder">Không ảnh</div>
+                        }
+                    </div>
+                    <div class="market-card__body">
+                        <h3 class="market-card__title">@vehicle.Brand @vehicle.Model</h3>
+                        <div class="market-card__price">@vehicle.Price.ToString("N0") đ</div>
+                        <dl class="market-card__meta">
+                            <div>
+                                <dt>Người đăng</dt>
+                                <dd>@(string.IsNullOrWhiteSpace(vehicle.SellerName) ? "Không rõ" : vehicle.SellerName)</dd>
+                            </div>
+                            <div>
+                                <dt>Năm</dt>
+                                <dd>@(vehicle.Year?.ToString() ?? "—")</dd>
+                            </div>
+                            <div>
+                                <dt>Dung lượng pin</dt>
+                                <dd>@(string.IsNullOrWhiteSpace(vehicle.BatteryCapacity) ? "—" : vehicle.BatteryCapacity)</dd>
+                            </div>
+                            <div>
+                                <dt>Tình trạng</dt>
+                                <dd>@vehicle.Condition</dd>
+                            </div>
+                        </dl>
+                    </div>
+                    <div class="market-card__footer">
+                        <a class="btn btn-chip btn-chip-neutral" asp-page="/VehicleListings/Details" asp-route-id="@vehicle.VehicleId">Xem chi tiết</a>
+                    </div>
+                </article>
+            }
+        </div>
+    }
+    else
+    {
+        <div class="market-empty">Chưa có tin xe nào được duyệt.</div>
+    }
+</section>
+
+<section class="market-section">
+    <div class="market-section__header">
+        <div>
+            <h2 class="market-section__title">Tin pin đã duyệt</h2>
+            <p class="text-muted mb-0 small">Các nguồn pin khả dụng để bạn liên hệ nhanh.</p>
+        </div>
+        <span class="market-section__count">@Model.ApprovedBatteries.Count tin</span>
+    </div>
+
+    @if (Model.ApprovedBatteries.Any())
+    {
+        <div class="market-grid">
+            @foreach (var battery in Model.ApprovedBatteries)
+            {
+                <article class="market-card">
+                    <div class="market-card__media">
+                        @if (!string.IsNullOrWhiteSpace(battery.ImageUrl))
+                        {
+                            <img src="@battery.ImageUrl" alt="Ảnh pin @battery.Brand @battery.BatteryType" />
+                        }
+                        else
+                        {
+                            <div class="market-card__media--placeholder">Không ảnh</div>
+                        }
+                    </div>
+                    <div class="market-card__body">
+                        <h3 class="market-card__title">@battery.Brand @battery.BatteryType</h3>
+                        <div class="market-card__price">@battery.Price.ToString("N0") đ</div>
+                        <dl class="market-card__meta">
+                            <div>
+                                <dt>Người đăng</dt>
+                                <dd>@(string.IsNullOrWhiteSpace(battery.SellerName) ? "Không rõ" : battery.SellerName)</dd>
+                            </div>
+                            <div>
+                                <dt>Dung lượng</dt>
+                                <dd>@battery.Capacity</dd>
+                            </div>
+                            <div>
+                                <dt>Điện áp</dt>
+                                <dd>@(string.IsNullOrWhiteSpace(battery.Voltage) ? "—" : battery.Voltage)</dd>
+                            </div>
+                            <div>
+                                <dt>Tình trạng</dt>
+                                <dd>@battery.Condition</dd>
+                            </div>
+                        </dl>
+                    </div>
+                    <div class="market-card__footer">
+                        <a class="btn btn-chip btn-chip-neutral" asp-page="/BatteryListings/Details" asp-route-id="@battery.BatteryId">Xem chi tiết</a>
+                    </div>
+                </article>
+            }
+        </div>
+    }
+    else
+    {
+        <div class="market-empty">Chưa có tin pin nào được duyệt.</div>
+    }
+</section>

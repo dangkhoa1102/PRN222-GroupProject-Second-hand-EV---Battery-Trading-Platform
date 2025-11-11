@@ -4,46 +4,74 @@
     ViewData["Title"] = "Đăng ký";
 }
 
-<div class="auth-wrapper">
-    <div class="auth-card">
-        <h1>Tạo tài khoản</h1>
+<div class="auth-page">
+    <div class="auth-bg"></div>
+    <div class="auth-shell">
+        <section class="auth-card-modern">
+            <div class="listing-card__header mb-4">
+                <span class="listing-icon">📝</span>
+                <div>
+                    <h1>Tạo tài khoản</h1>
+                    <p class="text-muted mb-0">Gia nhập cộng đồng EV Trading để đăng tin mua bán xe và pin điện đã qua sử dụng.</p>
+                </div>
+            </div>
 
-        @if (!string.IsNullOrEmpty(Model.ErrorMessage))
-        {
-            <div class="alert alert-danger" role="alert">@Model.ErrorMessage</div>
-        }
+            @if (!string.IsNullOrEmpty(Model.ErrorMessage))
+            {
+                <div class="alert alert-danger" role="alert">@Model.ErrorMessage</div>
+            }
 
-        <form method="post" class="needs-validation" novalidate>
-            <div class="mb-3">
-                <label asp-for="Input.FullName" class="form-label"></label>
-                <input asp-for="Input.FullName" class="form-control" />
-                <span asp-validation-for="Input.FullName" class="text-danger small"></span>
+            <form method="post" class="needs-validation" novalidate>
+                <div class="mb-3">
+                    <label asp-for="Input.FullName" class="form-label">Họ và tên</label>
+                    <input asp-for="Input.FullName" class="form-control" placeholder="Nguyễn Văn A" />
+                    <span asp-validation-for="Input.FullName" class="text-danger small"></span>
+                </div>
+                <div class="mb-3">
+                    <label asp-for="Input.Email" class="form-label">Email</label>
+                    <input asp-for="Input.Email" class="form-control" placeholder="you@example.com" />
+                    <span asp-validation-for="Input.Email" class="text-danger small"></span>
+                </div>
+                <div class="mb-3">
+                    <label asp-for="Input.PhoneNumber" class="form-label">Số điện thoại</label>
+                    <input asp-for="Input.PhoneNumber" class="form-control" placeholder="0909xxx..." />
+                    <span asp-validation-for="Input.PhoneNumber" class="text-danger small"></span>
+                </div>
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label asp-for="Input.Password" class="form-label">Mật khẩu</label>
+                        <input asp-for="Input.Password" class="form-control" placeholder="Ít nhất 6 ký tự" />
+                        <span asp-validation-for="Input.Password" class="text-danger small"></span>
+                    </div>
+                    <div class="col-md-6">
+                        <label asp-for="Input.ConfirmPassword" class="form-label">Xác nhận mật khẩu</label>
+                        <input asp-for="Input.ConfirmPassword" class="form-control" placeholder="Nhập lại mật khẩu" />
+                        <span asp-validation-for="Input.ConfirmPassword" class="text-danger small"></span>
+                    </div>
+                </div>
+
+                <div class="listing-footer mt-4">
+                    <a asp-page="/Account/Login" class="btn btn-secondary">Đã có tài khoản</a>
+                    <button type="submit" class="btn btn-primary px-4">Đăng ký</button>
+                </div>
+            </form>
+        </section>
+
+        <aside class="auth-side">
+            <h2>Tại sao chọn EV Trading?</h2>
+            <div class="auth-feature">
+                <span class="auth-feature-icon">🤝</span>
+                <p>Giao dịch dễ dàng giữa người mua và người bán, không bên trung gian.</p>
             </div>
-            <div class="mb-3">
-                <label asp-for="Input.Email" class="form-label"></label>
-                <input asp-for="Input.Email" class="form-control" />
-                <span asp-validation-for="Input.Email" class="text-danger small"></span>
+            <div class="auth-feature">
+                <span class="auth-feature-icon">📣</span>
+                <p>Tin đăng được nhiều người xem, hệ thống thông báo giúp bạn không bỏ lỡ cơ hội.</p>
             </div>
-            <div class="mb-3">
-                <label asp-for="Input.PhoneNumber" class="form-label"></label>
-                <input asp-for="Input.PhoneNumber" class="form-control" />
-                <span asp-validation-for="Input.PhoneNumber" class="text-danger small"></span>
+            <div class="auth-feature">
+                <span class="auth-feature-icon">🛎️</span>
+                <p>Nhận tư vấn từ staff khi cần hỗ trợ, đảm bảo tin đăng của bạn đạt tiêu chuẩn.</p>
             </div>
-            <div class="mb-3">
-                <label asp-for="Input.Password" class="form-label"></label>
-                <input asp-for="Input.Password" class="form-control" />
-                <span asp-validation-for="Input.Password" class="text-danger small"></span>
-            </div>
-            <div class="mb-3">
-                <label asp-for="Input.ConfirmPassword" class="form-label"></label>
-                <input asp-for="Input.ConfirmPassword" class="form-control" />
-                <span asp-validation-for="Input.ConfirmPassword" class="text-danger small"></span>
-            </div>
-            <div class="d-flex flex-column flex-sm-row align-items-sm-center gap-3">
-                <button type="submit" class="btn btn-primary px-4">Đăng ký</button>
-                <a asp-page="/Account/Login" class="btn btn-link px-0">Đã có tài khoản? Đăng nhập</a>
-            </div>
-        </form>
+        </aside>
     </div>
 </div>
 

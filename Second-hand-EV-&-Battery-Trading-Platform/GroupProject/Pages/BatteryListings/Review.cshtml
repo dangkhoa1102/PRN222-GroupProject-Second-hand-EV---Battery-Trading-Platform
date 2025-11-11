@@ -1,0 +1,77 @@
+@page "{id:int}"
+@model GroupProject.Pages.BatteryListings.ReviewModel
+@{
+    ViewData["Title"] = "Phê duyệt tin đăng bán pin";
+}
+
+<div class="page-header">
+    <h1>Phê duyệt tin pin</h1>
+    <a class="btn btn-link" asp-page="Manage">Quay lại danh sách</a>
+</div>
+
+@if (!string.IsNullOrEmpty(Model.ErrorMessage))
+{
+    <div class="alert alert-danger">@Model.ErrorMessage</div>
+}
+
+@if (Model.Listing is not null)
+{
+    <div class="card-modern mb-4">
+        <div class="row g-4">
+            <div class="col-md-6">
+                <h2 class="h4 text-success">@Model.Listing.Brand @Model.Listing.BatteryType</h2>
+                <dl class="row small">
+                    <dt class="col-sm-5">Người đăng</dt>
+                    <dd class="col-sm-7">@Model.Listing.SellerName</dd>
+                    <dt class="col-sm-5">Dung lượng</dt>
+                    <dd class="col-sm-7">@Model.Listing.Capacity</dd>
+                    <dt class="col-sm-5">Điện áp</dt>
+                    <dd class="col-sm-7">@Model.Listing.Voltage</dd>
+                    <dt class="col-sm-5">Tình trạng</dt>
+                    <dd class="col-sm-7">@Model.Listing.Condition</dd>
+                    <dt class="col-sm-5">Sức khỏe (%)</dt>
+                    <dd class="col-sm-7">@Model.Listing.HealthPercentage</dd>
+                    <dt class="col-sm-5">Giá đề xuất</dt>
+                    <dd class="col-sm-7">@Model.Listing.Price.ToString("N0") đ</dd>
+                </dl>
+            </div>
+            <div class="col-md-6">
+                @if (!string.IsNullOrEmpty(Model.Listing.ImageUrl))
+                {
+                    <img src="@Model.Listing.ImageUrl" alt="Ảnh pin" class="img-fluid rounded shadow-sm" />
+                }
+                else
+                {
+                    <div class="border border-dashed rounded-3 text-center p-5 text-muted">Chưa có hình ảnh</div>
+                }
+            </div>
+            <div class="col-12">
+                <h3 class="h5">Mô tả</h3>
+                <p class="mb-0">@Model.Listing.Description</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="card-modern">
+        <form method="post">
+            <div class="mb-3">
+                <label class="form-label" asp-for="ModerationNote">Ghi chú cho người đăng</label>
+                <textarea class="form-control" asp-for="ModerationNote" rows="3"></textarea>
+            </div>
+            <div class="d-flex flex-wrap gap-3">
+                <button class="btn btn-success" type="submit" asp-page-handler="Approve" disabled="@(Model.CanModerate ? null : "disabled")">Phê duyệt</button>
+                <button class="btn btn-warning" type="submit" asp-page-handler="NeedRevision" disabled="@(Model.CanModerate ? null : "disabled")">Yêu cầu chỉnh sửa</button>
+                <button class="btn btn-danger" type="submit" asp-page-handler="Reject" disabled="@(Model.CanModerate ? null : "disabled")">Từ chối</button>
+            </div>
+        </form>
+    </div>
+}
+else
+{
+    <div class="alert alert-warning">Không tìm thấy tin đăng.</div>
+}
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}
+

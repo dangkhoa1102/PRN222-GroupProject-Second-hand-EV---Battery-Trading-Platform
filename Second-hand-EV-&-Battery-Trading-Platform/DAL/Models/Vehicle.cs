@@ -29,9 +29,24 @@ public partial class Vehicle
 
     public string ImageUrl { get; set; }
 
+    public string Status { get; set; }
+
+    public string ModerationNote { get; set; }
+
+    public int? ApprovedBy { get; set; }
+
+    public DateTime? ApprovedDate { get; set; }
+
+    public DateTime? SubmittedDate { get; set; }
+
+    public DateTime? PublishedDate { get; set; }
+
+    public bool? IsActive { get; set; }
+
     public DateTime? CreatedDate { get; set; }
 
     public DateTime? UpdatedDate { get; set; }
 
     public virtual User Seller { get; set; }
+    public virtual User ApprovedByNavigation { get; set; }
 }

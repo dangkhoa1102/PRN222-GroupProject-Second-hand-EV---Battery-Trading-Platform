@@ -1,0 +1,98 @@
+@page
+@model GroupProject.Pages.BatteryListings.IndexModel
+@{
+    ViewData["Title"] = "Tin pin của tôi";
+    ViewData["FullWidth"] = true;
+}
+
+<div class="page-header">
+    <h1>Tin pin của tôi</h1>
+    <a class="btn btn-primary" asp-page="Upsert">Đăng pin mới</a>
+</div>
+
+@if (!string.IsNullOrEmpty(Model.FlashMessage))
+{
+    <div class="alert alert-success">@Model.FlashMessage</div>
+}
+
+@if (!string.IsNullOrEmpty(Model.ErrorMessage))
+{
+    <div class="alert alert-danger">@Model.ErrorMessage</div>
+}
+
+<div class="listing-table-card">
+    <div class="table-responsive">
+        <table class="table align-middle">
+            <thead>
+                <tr>
+                    <th>Ảnh</th>
+                    <th>Loại pin</th>
+                    <th>Thương hiệu</th>
+                    <th>Dung lượng</th>
+                    <th>Tình trạng</th>
+                    <th>Sức khỏe (%)</th>
+                    <th>Giá</th>
+                    <th>Trạng thái</th>
+                    <th>Ngày gửi</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (Model.Listings?.Any() == true)
+                {
+                    foreach (var listing in Model.Listings)
+                    {
+                        <tr>
+                            <td>
+                                @if (!string.IsNullOrWhiteSpace(listing.ImageUrl))
+                                {
+                                    <img src="@listing.ImageUrl" alt="Ảnh pin @listing.Brand @listing.BatteryType" class="listing-thumb" />
+                                }
+                                else
+                                {
+                                    <div class="listing-thumb listing-thumb--placeholder">Không ảnh</div>
+                                }
+                            </td>
+                            <td>@listing.BatteryType</td>
+                            <td>@listing.Brand</td>
+                            <td>@listing.Capacity</td>
+                            <td>@listing.Condition</td>
+                            <td>@(listing.HealthPercentage?.ToString() ?? "-")</td>
+                            <td>@listing.Price.ToString("N0") đ</td>
+                            <td>
+                                <span class="status-badge @Model.GetStatusCssClass(listing.Status)">@Model.FormatStatus(listing.Status)</span>
+                                @if (!string.IsNullOrEmpty(listing.ModerationNote))
+                                {
+                                    <div class="status-note">@listing.ModerationNote</div>
+                                }
+                            </td>
+                            <td>@(listing.SubmittedDate?.ToString("dd/MM/yyyy") ?? "-")</td>
+                            <td class="text-end">
+                                <div class="table-actions">
+                                    <a class="btn btn-chip btn-chip-primary @(Model.CanEdit(listing.Status) ? string.Empty : "disabled")" asp-page="Upsert" asp-route-id="@listing.BatteryId">Chỉnh sửa</a>
+                                    <a class="btn btn-chip btn-chip-neutral" asp-page="Details" asp-route-id="@listing.BatteryId">Xem chi tiết</a>
+                                    <form method="post" asp-page-handler="Submit" asp-route-id="@listing.BatteryId" class="d-inline">
+                                        <button class="btn btn-chip btn-chip-success" type="submit" @(Model.CanSubmit(listing.Status) ? "" : "disabled")>Gửi duyệt</button>
+                                    </form>
+                                    <form method="post" asp-page-handler="Delete" asp-route-id="@listing.BatteryId" class="d-inline" onsubmit="return confirm('Bạn chắc chắn muốn xóa tin này?');">
+                                        <button class="btn btn-chip btn-chip-danger" type="submit" @(Model.CanDelete(listing.Status) ? "" : "disabled")>Xóa</button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                }
+                else
+                {
+                    <tr>
+                        <td colspan="9" class="empty-state">
+                            <strong>Chưa có tin pin nào.</strong>
+                            Tạo tin mới để staff duyệt và tiếp cận khách hàng đang tìm pin phù hợp.
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
