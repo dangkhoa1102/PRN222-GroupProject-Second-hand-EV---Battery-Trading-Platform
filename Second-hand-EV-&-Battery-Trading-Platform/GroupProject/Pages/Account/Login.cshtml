@@ -4,35 +4,62 @@
     ViewData["Title"] = "Đăng nhập";
 }
 
-<div class="auth-wrapper">
-    <div class="auth-card">
-        <h1>Đăng nhập</h1>
+<div class="auth-page">
+    <div class="auth-bg"></div>
+    <div class="auth-shell">
+        <section class="auth-card-modern">
+            <div class="listing-card__header mb-4">
+                <span class="listing-icon">🔐</span>
+                <div>
+                    <h1>Đăng nhập</h1>
+                    <p class="text-muted mb-0">Chào mừng bạn quay lại EV Trading. Đăng nhập để quản lý tin và theo dõi giao dịch.</p>
+                </div>
+            </div>
 
-        @if (!string.IsNullOrEmpty(Model.ErrorMessage))
-        {
-            <div class="alert alert-danger" role="alert">@Model.ErrorMessage</div>
-        }
-        @if (!string.IsNullOrEmpty(Model.SuccessMessage))
-        {
-            <div class="alert alert-success" role="alert">@Model.SuccessMessage</div>
-        }
+            @if (!string.IsNullOrEmpty(Model.ErrorMessage))
+            {
+                <div class="alert alert-danger" role="alert">@Model.ErrorMessage</div>
+            }
+            @if (!string.IsNullOrEmpty(Model.SuccessMessage))
+            {
+                <div class="alert alert-success" role="alert">@Model.SuccessMessage</div>
+            }
 
-        <form method="post" class="needs-validation" novalidate>
-            <div class="mb-3">
-                <label asp-for="Input.Email" class="form-label"></label>
-                <input asp-for="Input.Email" class="form-control" />
-                <span asp-validation-for="Input.Email" class="text-danger small"></span>
+            <form method="post" class="needs-validation" novalidate>
+                <div class="mb-3">
+                    <label asp-for="Input.Email" class="form-label">Email</label>
+                    <input asp-for="Input.Email" class="form-control" placeholder="you@example.com" />
+                    <span asp-validation-for="Input.Email" class="text-danger small"></span>
+                </div>
+                <div class="mb-4">
+                    <label asp-for="Input.Password" class="form-label">Mật khẩu</label>
+                    <input asp-for="Input.Password" class="form-control" placeholder="Nhập mật khẩu của bạn" />
+                    <span asp-validation-for="Input.Password" class="text-danger small"></span>
+                </div>
+                <button type="submit" class="btn btn-primary">Đăng nhập</button>
+            </form>
+
+            <div class="auth-footer">
+                <span>Chưa có tài khoản?</span>
+                <a asp-page="/Account/Register" class="auth-link">Đăng ký ngay →</a>
             </div>
-            <div class="mb-3">
-                <label asp-for="Input.Password" class="form-label"></label>
-                <input asp-for="Input.Password" class="form-control" />
-                <span asp-validation-for="Input.Password" class="text-danger small"></span>
+        </section>
+
+        <aside class="auth-side">
+            <h2>EV Trading Platform</h2>
+            <div class="auth-feature">
+                <span class="auth-feature-icon">⚡</span>
+                <p>Kết nối cộng đồng mua bán xe & pin điện đã qua sử dụng một cách minh bạch và an toàn.</p>
             </div>
-            <div class="d-flex flex-column flex-sm-row align-items-sm-center gap-3">
-                <button type="submit" class="btn btn-primary px-4">Đăng nhập</button>
-                <a asp-page="/Account/Register" class="btn btn-link px-0">Chưa có tài khoản? Đăng ký</a>
+            <div class="auth-feature">
+                <span class="auth-feature-icon">🛡️</span>
+                <p>Tin đăng được staff kiểm duyệt kỹ lưỡng trước khi hiển thị công khai.</p>
             </div>
-        </form>
+            <div class="auth-feature">
+                <span class="auth-feature-icon">📊</span>
+                <p>Theo dõi hiệu quả tin đăng, nhận thông báo khi có khách hàng quan tâm.</p>
+            </div>
+        </aside>
     </div>
 </div>
 

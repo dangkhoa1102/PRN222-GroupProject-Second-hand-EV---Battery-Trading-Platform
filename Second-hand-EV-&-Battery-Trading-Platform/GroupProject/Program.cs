@@ -13,6 +13,8 @@ builder.Services.AddSession(options =>
 });
 
 builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddScoped<IVehicleListingService, VehicleListingService>();
+builder.Services.AddScoped<IBatteryListingService, BatteryListingService>();
 
 var app = builder.Build();
 

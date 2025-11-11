@@ -1,0 +1,108 @@
+@page "{id:int}"
+@model GroupProject.Pages.BatteryListings.DetailsModel
+@{
+    ViewData["Title"] = "Chi tiết tin pin";
+}
+
+<div class="page-header">
+    <h1>Chi tiết tin pin</h1>
+    <a class="btn btn-link" asp-page="@(Model.IsOwner ? "Index" : "/Index")">Quay lại danh sách</a>
+</div>
+
+@if (!string.IsNullOrEmpty(Model.ErrorMessage))
+{
+    <div class="alert alert-danger">@Model.ErrorMessage</div>
+}
+
+@if (Model.Listing is not null)
+{
+    <div class="card-modern mb-4">
+        <div class="row g-4">
+            <div class="col-lg-6">
+                <div class="d-flex align-items-center gap-3 mb-3">
+                    <span class="listing-icon">🔋</span>
+                    <div>
+                        <h2 class="h4 text-success mb-1">@Model.Listing.Brand @Model.Listing.BatteryType</h2>
+                        <div class="badge bg-light text-success fw-semibold px-3 py-2">
+                            @Model.FormatStatus(Model.Listing.Status)
+                        </div>
+                    </div>
+                </div>
+                <dl class="row mb-0">
+                    <dt class="col-sm-5">Người đăng</dt>
+                    <dd class="col-sm-7">@Model.Listing.SellerName</dd>
+
+                    <dt class="col-sm-5">Email liên hệ</dt>
+                    <dd class="col-sm-7">@(string.IsNullOrWhiteSpace(Model.Listing.SellerEmail) ? "—" : Model.Listing.SellerEmail)</dd>
+
+                    <dt class="col-sm-5">Số điện thoại</dt>
+                    <dd class="col-sm-7">@(string.IsNullOrWhiteSpace(Model.Listing.SellerPhoneNumber) ? "—" : Model.Listing.SellerPhoneNumber)</dd>
+
+                    <dt class="col-sm-5">Loại pin</dt>
+                    <dd class="col-sm-7">@(string.IsNullOrWhiteSpace(Model.Listing.BatteryType) ? "—" : Model.Listing.BatteryType)</dd>
+
+                    <dt class="col-sm-5">Thương hiệu</dt>
+                    <dd class="col-sm-7">@(string.IsNullOrWhiteSpace(Model.Listing.Brand) ? "—" : Model.Listing.Brand)</dd>
+
+                    <dt class="col-sm-5">Dung lượng</dt>
+                    <dd class="col-sm-7">@(string.IsNullOrWhiteSpace(Model.Listing.Capacity) ? "—" : Model.Listing.Capacity)</dd>
+
+                    <dt class="col-sm-5">Điện áp</dt>
+                    <dd class="col-sm-7">@(string.IsNullOrWhiteSpace(Model.Listing.Voltage) ? "—" : Model.Listing.Voltage)</dd>
+
+                    <dt class="col-sm-5">Tình trạng</dt>
+                    <dd class="col-sm-7">@(string.IsNullOrWhiteSpace(Model.Listing.Condition) ? "—" : Model.Listing.Condition)</dd>
+
+                    <dt class="col-sm-5">Sức khỏe (%)</dt>
+                    <dd class="col-sm-7">@(Model.Listing.HealthPercentage.HasValue ? Model.Listing.HealthPercentage.Value.ToString("N0") : "—")</dd>
+
+                    <dt class="col-sm-5">Giá đề xuất</dt>
+                    <dd class="col-sm-7">@Model.Listing.Price.ToString("N0") đ</dd>
+
+                    <dt class="col-sm-5">Ngày gửi</dt>
+                    <dd class="col-sm-7">@(Model.Listing.SubmittedDate.HasValue ? Model.Listing.SubmittedDate.Value.ToLocalTime().ToString("dd/MM/yyyy HH:mm") : "—")</dd>
+
+                    <dt class="col-sm-5">Ngày duyệt</dt>
+                    <dd class="col-sm-7">@(Model.Listing.ApprovedDate.HasValue ? Model.Listing.ApprovedDate.Value.ToLocalTime().ToString("dd/MM/yyyy HH:mm") : "—")</dd>
+
+                    <dt class="col-sm-5">Ngày đăng</dt>
+                    <dd class="col-sm-7">@(Model.Listing.PublishedDate.HasValue ? Model.Listing.PublishedDate.Value.ToLocalTime().ToString("dd/MM/yyyy HH:mm") : "—")</dd>
+                </dl>
+            </div>
+            <div class="col-lg-6">
+                @if (!string.IsNullOrEmpty(Model.Listing.ImageUrl))
+                {
+                    <img src="@Model.Listing.ImageUrl" alt="Ảnh pin" class="img-fluid rounded-4 shadow-sm w-100" />
+                }
+                else
+                {
+                    <div class="border border-dashed rounded-4 text-center p-5 text-muted">
+                        Chưa có hình ảnh
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+
+    <div class="card-modern">
+        <h3 class="h5 mb-3">Mô tả chi tiết</h3>
+        <p class="mb-4">@(string.IsNullOrWhiteSpace(Model.Listing.Description)
+            ? "Người đăng chưa cung cấp mô tả."
+            : Model.Listing.Description)</p>
+
+        @if (Model.IsOwner && !string.IsNullOrEmpty(Model.Listing.ModerationNote))
+        {
+            <div class="alert alert-warning mb-0">
+                <strong>Ghi chú từ quản trị viên:</strong>
+                <div>@Model.Listing.ModerationNote</div>
+            </div>
+        }
+    </div>
+}
+else if (string.IsNullOrEmpty(Model.ErrorMessage))
+{
+    <div class="alert alert-warning">Không tìm thấy tin đăng.</div>
+}
+
+
+

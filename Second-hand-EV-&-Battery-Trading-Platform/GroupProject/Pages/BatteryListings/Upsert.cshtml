@@ -1,0 +1,111 @@
+@page "{id?}"
+@model GroupProject.Pages.BatteryListings.UpsertModel
+@{
+    ViewData["Title"] = Model.IsEdit ? "Chỉnh sửa tin pin" : "Đăng pin mới";
+}
+
+<div class="listing-container">
+    <div class="listing-card">
+        <div class="listing-card__header">
+            <span class="listing-icon">🔋</span>
+            <div>
+                <h1 class="listing-card__title">@ViewData["Title"]</h1>
+                <p class="listing-card__subtitle">Chia sẻ thông tin pin một cách chi tiết để người mua dễ dàng đánh giá và staff duyệt nhanh.</p>
+            </div>
+        </div>
+
+        @if (!string.IsNullOrEmpty(Model.ErrorMessage))
+        {
+            <div class="alert alert-danger mb-4">@Model.ErrorMessage</div>
+        }
+
+        <div asp-validation-summary="ModelOnly" class="alert alert-danger mb-4" role="alert"></div>
+
+        <form method="post" enctype="multipart/form-data" class="needs-validation" novalidate>
+            <input type="hidden" asp-for="Input.ImageUrl" />
+            <div class="form-section-title">Thông tin pin</div>
+            <div class="form-grid two-col">
+                <div class="input-field">
+                    <label asp-for="Input.BatteryType" class="form-label"></label>
+                    <input asp-for="Input.BatteryType" class="form-control" placeholder="Lithium-ion, LFP..." />
+                    <span asp-validation-for="Input.BatteryType" class="text-danger small"></span>
+                </div>
+                <div class="input-field">
+                    <label asp-for="Input.Brand" class="form-label"></label>
+                    <input asp-for="Input.Brand" class="form-control" placeholder="Panasonic, CATL..." />
+                    <span asp-validation-for="Input.Brand" class="text-danger small"></span>
+                </div>
+                <div class="input-field">
+                    <label asp-for="Input.Capacity" class="form-label"></label>
+                    <input asp-for="Input.Capacity" class="form-control" placeholder="90 kWh" />
+                    <span asp-validation-for="Input.Capacity" class="text-danger small"></span>
+                </div>
+                <div class="input-field">
+                    <label asp-for="Input.Voltage" class="form-label"></label>
+                    <input asp-for="Input.Voltage" class="form-control" placeholder="400V" />
+                    <span asp-validation-for="Input.Voltage" class="text-danger small"></span>
+                </div>
+                <div class="input-field">
+                    <label asp-for="Input.Condition" class="form-label"></label>
+                    <input asp-for="Input.Condition" class="form-control" placeholder="Mới 85%, bảo quản tốt..." />
+                    <span asp-validation-for="Input.Condition" class="text-danger small"></span>
+                </div>
+                <div class="input-field">
+                    <label asp-for="Input.HealthPercentage" class="form-label"></label>
+                    <input asp-for="Input.HealthPercentage" class="form-control" placeholder="Tỷ lệ SOH" />
+                    <span asp-validation-for="Input.HealthPercentage" class="text-danger small"></span>
+                </div>
+                <div class="input-field">
+                    <label class="form-label" for="PriceInput">Giá bán mong muốn</label>
+                    <input class="form-control" id="PriceInput" name="PriceInput" value="@Model.PriceInput" placeholder="Nhập giá mong muốn (vd: 1200000.00)" />
+                    <span asp-validation-for="PriceInput" class="text-danger small"></span>
+                    <div class="form-helper">Nêu rõ đã bao gồm phí lắp đặt, vận chuyển hay chưa.</div>
+                </div>
+            </div>
+
+            <div class="form-section-title">Mô tả & hình ảnh</div>
+            <div class="form-grid">
+                <div class="input-field">
+                    <label asp-for="Input.Description" class="form-label"></label>
+                    <textarea asp-for="Input.Description" class="form-control" rows="4" placeholder="Nêu rõ nguồn gốc, thời gian sử dụng, chế độ sạc..."></textarea>
+                    <span asp-validation-for="Input.Description" class="text-danger small"></span>
+                </div>
+                <div class="input-field">
+                    <label class="form-label" asp-for="ImageFile">Ảnh minh họa</label>
+                    <input asp-for="ImageFile" class="form-control" type="file" accept="image/*" />
+                    <span asp-validation-for="ImageFile" class="text-danger small"></span>
+                    <div class="form-helper">Ảnh nên chụp tem thông số, tình trạng bề mặt pin. Giới hạn 5MB.</div>
+                    @if (!string.IsNullOrEmpty(Model.Input.ImageUrl))
+                    {
+                        <div class="form-helper mt-2">Ảnh hiện tại:</div>
+                        <img src="@Model.Input.ImageUrl" alt="Ảnh hiện tại" class="listing-preview" />
+                    }
+                </div>
+            </div>
+
+            <div class="listing-footer">
+                <a asp-page="Index" class="btn btn-secondary">Quay lại danh sách</a>
+                <button type="submit" class="btn btn-primary px-4">Lưu tin đăng</button>
+            </div>
+        </form>
+    </div>
+
+    <aside class="listing-aside">
+        <h2>Chuẩn bị trước khi đăng</h2>
+        <ul>
+            <li>Kiểm tra và ghi chú số chu kỳ sạc, mức độ xuống pin.</li>
+            <li>Ảnh chụp pin ở nhiều góc, rõ cổng kết nối, phụ kiện.</li>
+            <li>Nêu rõ pin dùng cho dòng xe nào, chính sách bảo hành.</li>
+            <li>Đảm bảo ảnh tải lên rõ nét, không chứa thông tin nhạy cảm.</li>
+        </ul>
+
+        <div class="tip-card">
+            <strong>Gợi ý:</strong> Thêm thông tin về chứng chỉ an toàn, lịch sử sử dụng pin giúp người mua yên tâm hơn.
+        </div>
+    </aside>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}
+

@@ -1,0 +1,92 @@
+@page
+@model GroupProject.Pages.VehicleListings.ManageModel
+@{
+    ViewData["Title"] = "Quản lý tin xe";
+    ViewData["FullWidth"] = true;
+}
+
+<div class="page-header">
+    <h1>Quản lý tin xe</h1>
+</div>
+
+@if (!string.IsNullOrEmpty(Model.FlashMessage))
+{
+    <div class="alert alert-success">@Model.FlashMessage</div>
+}
+
+@if (!string.IsNullOrEmpty(Model.ErrorMessage))
+{
+    <div class="alert alert-danger">@Model.ErrorMessage</div>
+}
+
+<div class="listing-table-card">
+    <div class="table-responsive">
+        <table class="table align-middle">
+            <thead>
+                <tr>
+                    <th>Ảnh</th>
+                    <th>Hãng</th>
+                    <th>Model</th>
+                    <th>Năm</th>
+                    <th>Người đăng</th>
+                    <th>Email</th>
+                    <th>Số điện thoại</th>
+                    <th>Giá</th>
+                    <th>Trạng thái</th>
+                    <th>Ngày gửi</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (Model.Listings?.Any() == true)
+                {
+                    foreach (var listing in Model.Listings)
+                    {
+                        <tr>
+                            <td>
+                                @if (!string.IsNullOrWhiteSpace(listing.ImageUrl))
+                                {
+                                    <img src="@listing.ImageUrl" alt="Ảnh xe @listing.Brand @listing.Model" class="listing-thumb" />
+                                }
+                                else
+                                {
+                                    <div class="listing-thumb listing-thumb--placeholder">Không ảnh</div>
+                                }
+                            </td>
+                            <td>@listing.Brand</td>
+                            <td>@listing.Model</td>
+                            <td>@(listing.Year?.ToString() ?? "-")</td>
+                            <td>@(string.IsNullOrWhiteSpace(listing.SellerName) ? "-" : listing.SellerName)</td>
+                            <td>@(string.IsNullOrWhiteSpace(listing.SellerEmail) ? "-" : listing.SellerEmail)</td>
+                            <td>@(string.IsNullOrWhiteSpace(listing.SellerPhoneNumber) ? "-" : listing.SellerPhoneNumber)</td>
+                            <td>@listing.Price.ToString("N0") đ</td>
+                            <td>
+                                <span class="status-badge @Model.GetStatusCssClass(listing.Status)">@Model.FormatStatus(listing.Status)</span>
+                                @if (!string.IsNullOrEmpty(listing.ModerationNote))
+                                {
+                                    <div class="status-note">@listing.ModerationNote</div>
+                                }
+                            </td>
+                            <td>@(listing.SubmittedDate?.ToString("dd/MM/yyyy HH:mm") ?? "-")</td>
+                            <td class="text-end">
+                                <div class="table-actions">
+                                    <a class="btn btn-chip btn-chip-neutral" asp-page="Review" asp-route-id="@listing.VehicleId">Xem / duyệt</a>
+                                    <form method="post" asp-page-handler="Delete" asp-route-id="@listing.VehicleId" class="d-inline" onsubmit="return confirm('Bạn chắc chắn muốn gỡ tin xe này?');">
+                                        <button class="btn btn-chip btn-chip-danger" type="submit">Gỡ tin</button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                }
+                else
+                {
+                    <tr>
+                        <td colspan="11" class="text-center text-muted py-4">Chưa có tin xe nào trong hệ thống.</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
