@@ -20,6 +20,8 @@ public partial class EVTradingPlatformContext : DbContext
 
     public virtual DbSet<Battery> Batteries { get; set; }
 
+    public virtual DbSet<BatteryOrder> BatteryOrders { get; set; }
+
     public virtual DbSet<Order> Orders { get; set; }
 
     public virtual DbSet<Review> Reviews { get; set; }
@@ -27,6 +29,8 @@ public partial class EVTradingPlatformContext : DbContext
     public virtual DbSet<User> Users { get; set; }
 
     public virtual DbSet<Vehicle> Vehicles { get; set; }
+
+    public virtual DbSet<VehicleOrder> VehicleOrders { get; set; }
 
     private string GetConnectionString()
     {
@@ -103,9 +107,6 @@ public partial class EVTradingPlatformContext : DbContext
             entity.Property(e => e.CreatedDate)
                 .HasDefaultValueSql("(getdate())")
                 .HasColumnType("datetime");
-            entity.Property(e => e.OrderType)
-                .IsRequired()
-                .HasMaxLength(20);
             entity.Property(e => e.PaymentMethod).HasMaxLength(50);
             entity.Property(e => e.TotalAmount).HasColumnType("decimal(18, 2)");
 
@@ -118,6 +119,36 @@ public partial class EVTradingPlatformContext : DbContext
                 .HasForeignKey(d => d.SellerId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK__Orders__SellerId__5AEE82B9");
+        });
+
+        modelBuilder.Entity<BatteryOrder>(entity =>
+        {
+            entity.HasKey(e => e.OrderId).HasName("PK_BatteryOrders");
+
+            entity.HasOne(d => d.Order).WithOne(p => p.BatteryOrder)
+                .HasForeignKey<BatteryOrder>(d => d.OrderId)
+                .OnDelete(DeleteBehavior.Cascade)
+                .HasConstraintName("FK_BatteryOrders_Orders");
+
+            entity.HasOne(d => d.Battery).WithMany(p => p.BatteryOrders)
+                .HasForeignKey(d => d.BatteryId)
+                .OnDelete(DeleteBehavior.Cascade)
+                .HasConstraintName("FK_BatteryOrders_Batteries");
+        });
+
+        modelBuilder.Entity<VehicleOrder>(entity =>
+        {
+            entity.HasKey(e => e.OrderId).HasName("PK_VehicleOrders");
+
+            entity.HasOne(d => d.Order).WithOne(p => p.VehicleOrder)
+                .HasForeignKey<VehicleOrder>(d => d.OrderId)
+                .OnDelete(DeleteBehavior.Cascade)
+                .HasConstraintName("FK_VehicleOrders_Orders");
+
+            entity.HasOne(d => d.Vehicle).WithMany(p => p.VehicleOrders)
+                .HasForeignKey(d => d.VehicleId)
+                .OnDelete(DeleteBehavior.Cascade)
+                .HasConstraintName("FK_VehicleOrders_Vehicles");
         });
 
         modelBuilder.Entity<Review>(entity =>
