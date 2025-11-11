@@ -13,10 +13,6 @@ public partial class Order
 
     public int SellerId { get; set; }
 
-    public string OrderType { get; set; }
-
-    public int ItemId { get; set; }
-
     public decimal TotalAmount { get; set; }
 
     public string PaymentMethod { get; set; }
@@ -30,4 +26,8 @@ public partial class Order
     public virtual ICollection<Review> Reviews { get; set; } = new List<Review>();
 
     public virtual User Seller { get; set; }
+
+    public virtual BatteryOrder BatteryOrder { get; set; }
+
+    public virtual VehicleOrder VehicleOrder { get; set; }
 }
