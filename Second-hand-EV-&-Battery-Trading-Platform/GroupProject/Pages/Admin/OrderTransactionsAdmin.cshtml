@@ -1,0 +1,51 @@
+﻿@page
+@model GroupProject.Pages.Admin.OrderTransactionsAdminModel
+@{
+    ViewData["Title"] = "Tất cả giao dịch (Admin)";
+    ViewData["FullWidth"] = true;
+}
+
+<div class="page-header">
+    <h1>📦 Tất cả giao dịch</h1>
+</div>
+
+<div class="listing-table-card">
+    <div class="table-responsive">
+        @if (Model.Transactions.Count == 0)
+        {
+            <div class="empty-state text-center py-4">
+                <strong>Không có giao dịch nào.</strong>
+            </div>
+        }
+        else
+        {
+            <table class="table align-middle table-striped">
+                <thead class="table-light">
+                    <tr>
+                        <th>Order ID</th>
+                        <th>Người mua</th>
+                        <th>Người bán</th>
+                        <th>Số tiền (₫)</th>
+                        <th>Phương thức thanh toán</th>
+                        <th>Ngày tạo</th>
+                        <th>Hoàn tất</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var t in Model.Transactions)
+                    {
+                        <tr>
+                            <td>@t.OrderId</td>
+                            <td>@t.BuyerName</td>
+                            <td>@t.SellerName</td>
+                            <td>@t.TotalAmount.ToString("N0") đ</td>
+                            <td>@t.PaymentMethod</td>
+                            <td>@t.CreatedDate?.ToString("dd/MM/yyyy")</td>
+                            <td>@t.CompletedDate?.ToString("dd/MM/yyyy")</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+    </div>
+</div>

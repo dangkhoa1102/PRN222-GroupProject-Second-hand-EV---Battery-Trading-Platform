@@ -75,6 +75,16 @@
                                         <li><a class="dropdown-item" asp-page="/BatteryListings/Manage">Tất cả tin pin</a></li>
                                     </ul>
                                 </div>
+                                <div class="dropdown nav-dropdown">
+                                    <button class="btn btn-outline-light dropdown-toggle" type="button" id="adminTransactionsDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                                        Quản lý giao dịch
+                                    </button>
+                                    <ul class="dropdown-menu dropdown-menu-center" aria-labelledby="adminTransactionsDropdown">
+                                        <li><a class="dropdown-item" asp-page="/Admin/OrderTransactionsAdmin">Tất cả</a></li>
+                                        <li><a class="dropdown-item" asp-page="/Admin/VehicleTransactionsAdmin">Xe</a></li>
+                                        <li><a class="dropdown-item" asp-page="/Admin/BatteryTransactionsAdmin">Pin</a></li>
+                                    </ul>
+                                </div>
                             }
                         </div>
                     }

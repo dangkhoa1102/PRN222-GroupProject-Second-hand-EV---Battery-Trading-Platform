@@ -1,0 +1,51 @@
+﻿@page
+@model GroupProject.Pages.Admin.VehicleTransactionsAdminModel
+@{
+    ViewData["Title"] = "Giao dịch xe (Admin)";
+    ViewData["FullWidth"] = true;
+}
+
+<div class="page-header">
+    <h1>🚗 Giao dịch xe</h1>
+</div>
+
+<div class="listing-table-card">
+    <div class="table-responsive">
+        @if (Model.Transactions.Count == 0)
+        {
+            <div class="empty-state text-center py-4">
+                <strong>Không có giao dịch xe nào.</strong>
+            </div>
+        }
+        else
+        {
+            <table class="table align-middle table-striped">
+                <thead class="table-light">
+                    <tr>
+                        <th>Order ID</th>
+                        <th>Người mua</th>
+                        <th>Người bán</th>
+                        <th>Xe</th>
+                        <th>Giá trị (₫)</th>
+                        <th>Thanh toán</th>
+                        <th>Ngày hoàn tất</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var t in Model.Transactions)
+                    {
+                        <tr>
+                            <td>@t.OrderId</td>
+                            <td>@t.BuyerName</td>
+                            <td>@t.SellerName</td>
+                            <td>@($"{t.VehicleBrand} {t.VehicleModel}")</td>
+                            <td>@t.TotalAmount.ToString("N0") đ</td>
+                            <td>@t.PaymentMethod</td>
+                            <td>@t.CompletedDate?.ToString("dd/MM/yyyy")</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+    </div>
+</div>
