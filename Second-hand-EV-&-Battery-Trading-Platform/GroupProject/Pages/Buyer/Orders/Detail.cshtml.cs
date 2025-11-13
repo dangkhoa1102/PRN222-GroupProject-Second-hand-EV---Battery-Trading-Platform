@@ -1,6 +1,7 @@
 using BLL.Constants;
 using BLL.DTOs;
 using BLL.Services;
+using GroupProject.Services;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
@@ -10,10 +11,12 @@ namespace GroupProject.Pages.Buyer.Orders;
 public class DetailModel : PageModel
 {
     private readonly IBuyerOrderService _buyerOrderService;
+    private readonly INotificationService _notificationService;
 
-    public DetailModel(IBuyerOrderService buyerOrderService)
+    public DetailModel(IBuyerOrderService buyerOrderService, INotificationService notificationService)
     {
         _buyerOrderService = buyerOrderService;
+        _notificationService = notificationService;
     }
 
     public OrderDetailDto? OrderDetail { get; private set; }
@@ -88,9 +91,20 @@ public class DetailModel : PageModel
 
         try
         {
+            var orderDetail = await _buyerOrderService.GetBuyerOrderDetailAsync(id, userId.Value);
+            if (orderDetail == null)
+            {
+                ErrorMessage = "Không tìm thấy đơn hàng.";
+                return RedirectToPage(new { id = id });
+            }
+
             var result = await _buyerOrderService.MarkAsPaidAsync(id, userId.Value, paymentMethod);
             if (result)
             {
+                // Gửi SignalR notification
+                await _notificationService.NotifyOrderUpdateAsync(id, orderDetail.SellerId, userId.Value, 
+                    "Người mua đã chuyển tiền", "Paid");
+
                 StatusMessage = "Đã xác nhận chuyển tiền thành công! Người bán sẽ bắt đầu giao hàng.";
                 return RedirectToPage(new { id = id, message = StatusMessage });
             }
@@ -128,9 +142,20 @@ public class DetailModel : PageModel
 
         try
         {
+            var orderDetail = await _buyerOrderService.GetBuyerOrderDetailAsync(id, userId.Value);
+            if (orderDetail == null)
+            {
+                ErrorMessage = "Không tìm thấy đơn hàng.";
+                return RedirectToPage(new { id = id });
+            }
+
             var result = await _buyerOrderService.ConfirmDeliveryAsync(id, userId.Value);
             if (result)
             {
+                // Gửi SignalR notification
+                await _notificationService.NotifyOrderUpdateAsync(id, orderDetail.SellerId, userId.Value, 
+                    "Người mua đã xác nhận hoàn thành đơn hàng", "Completed");
+
                 StatusMessage = "Đã xác nhận hoàn thành đơn hàng thành công!";
                 return RedirectToPage(new { id = id, message = StatusMessage });
             }
@@ -168,9 +193,20 @@ public class DetailModel : PageModel
 
         try
         {
+            var orderDetail = await _buyerOrderService.GetBuyerOrderDetailAsync(id, userId.Value);
+            if (orderDetail == null)
+            {
+                ErrorMessage = "Không tìm thấy đơn hàng.";
+                return RedirectToPage(new { id = id });
+            }
+
             var result = await _buyerOrderService.CancelOrderAsync(id, userId.Value, reason);
             if (result)
             {
+                // Gửi SignalR notification
+                await _notificationService.NotifyOrderUpdateAsync(id, orderDetail.SellerId, userId.Value, 
+                    $"Đơn hàng đã bị hủy: {reason ?? "Người mua hủy đơn hàng"}", "Cancelled");
+
                 StatusMessage = "Đã hủy đơn hàng thành công!";
                 return RedirectToPage(new { id = id, message = StatusMessage });
             }

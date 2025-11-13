@@ -1,6 +1,8 @@
 using BLL.Services;
 using BLL.Configuration;
 using GroupProject.Services.BackgroundServices;
+using GroupProject.Hubs;
+using GroupProject.Services;
 using System.Text;
 
 // Set UTF-8 encoding for console and response
@@ -44,6 +46,12 @@ builder.Services.AddScoped<IReviewService, ReviewService>();
 builder.Services.AddAdminTransactionService(builder.Configuration);
 builder.Services.AddScoped<IAdminReviewService, AdminReviewService>();
 
+// Register SignalR
+builder.Services.AddSignalR();
+
+// Register Notification Service
+builder.Services.AddScoped<INotificationService, NotificationService>();
+
 // Register Background Services from HEAD branch
 builder.Services.AddHostedService<OrderAutoCancelService>();
 
@@ -78,5 +86,8 @@ app.UseSession();
 app.UseAuthorization();
 
 app.MapRazorPages();
+
+// Map SignalR Hub
+app.MapHub<NotificationHub>("/notificationHub");
 
 app.Run();

@@ -1,5 +1,6 @@
 using BLL.DTOs;
 using BLL.Services;
+using GroupProject.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 
@@ -8,10 +9,12 @@ namespace GroupProject.Pages.Seller.Orders;
 public class DetailModel : PageModel
 {
     private readonly IOrderService _orderService;
+    private readonly INotificationService _notificationService;
 
-    public DetailModel(IOrderService orderService)
+    public DetailModel(IOrderService orderService, INotificationService notificationService)
     {
         _orderService = orderService;
+        _notificationService = notificationService;
     }
 
     public OrderDetailDto OrderDetail { get; set; } = new();
@@ -48,6 +51,13 @@ public class DetailModel : PageModel
             return RedirectToPage("/Account/Login");
         }
 
+        var orderDetail = await _orderService.GetOrderDetailAsync(id, sellerId.Value);
+        if (orderDetail == null)
+        {
+            TempData["Error"] = "Không tìm thấy đơn hàng.";
+            return RedirectToPage(new { id = id });
+        }
+
         var result = await _orderService.ConfirmOrderAsync(id, sellerId.Value);
 
         if (!result)
@@ -55,6 +65,10 @@ public class DetailModel : PageModel
             TempData["Error"] = "Không thể xác nhận đơn hàng. Vui lòng kiểm tra lại.";
             return RedirectToPage(new { id = id });
         }
+
+        // Gửi SignalR notification
+        await _notificationService.NotifyOrderUpdateAsync(id, sellerId.Value, orderDetail.BuyerId, 
+            "Đơn hàng đã được người bán xác nhận", "Confirmed");
 
         StatusMessage = "Đơn hàng đã được xác nhận thành công!";
         return RedirectToPage(new { id = id });
@@ -69,6 +83,13 @@ public class DetailModel : PageModel
             return RedirectToPage("/Account/Login");
         }
 
+        var orderDetail = await _orderService.GetOrderDetailAsync(id, sellerId.Value);
+        if (orderDetail == null)
+        {
+            TempData["Error"] = "Không tìm thấy đơn hàng.";
+            return RedirectToPage(new { id = id });
+        }
+
         var result = await _orderService.ShipOrderAsync(id, sellerId.Value);
 
         if (!result)
@@ -76,6 +97,10 @@ public class DetailModel : PageModel
             TempData["Error"] = "Không thể giao hàng. Vui lòng kiểm tra lại trạng thái đơn hàng.";
             return RedirectToPage(new { id = id });
         }
+
+        // Gửi SignalR notification
+        await _notificationService.NotifyOrderUpdateAsync(id, sellerId.Value, orderDetail.BuyerId, 
+            "Đơn hàng đang được giao", "Delivering");
 
         StatusMessage = "Đơn hàng đã được chuyển sang trạng thái đang giao hàng!";
         return RedirectToPage(new { id = id });
@@ -90,6 +115,13 @@ public class DetailModel : PageModel
             return RedirectToPage("/Account/Login");
         }
 
+        var orderDetail = await _orderService.GetOrderDetailAsync(id, sellerId.Value);
+        if (orderDetail == null)
+        {
+            TempData["Error"] = "Không tìm thấy đơn hàng.";
+            return RedirectToPage(new { id = id });
+        }
+
         var result = await _orderService.CompleteShipmentAsync(id, sellerId.Value);
 
         if (!result)
@@ -97,6 +129,10 @@ public class DetailModel : PageModel
             TempData["Error"] = "Không thể hoàn thành giao hàng. Vui lòng kiểm tra lại trạng thái đơn hàng.";
             return RedirectToPage(new { id = id });
         }
+
+        // Gửi SignalR notification
+        await _notificationService.NotifyOrderUpdateAsync(id, sellerId.Value, orderDetail.BuyerId, 
+            "Đơn hàng đã được giao. Vui lòng xác nhận nhận hàng trong 5 phút.", "Delivered");
 
         StatusMessage = "Đơn hàng đã được đánh dấu là đã giao hàng! Người mua có 5 phút để xác nhận nhận hàng.";
         return RedirectToPage(new { id = id });
@@ -121,6 +157,13 @@ public class DetailModel : PageModel
                 return RedirectToPage(new { id = id });
             }
 
+            var orderDetail = await _orderService.GetOrderDetailAsync(id, sellerId.Value);
+            if (orderDetail == null)
+            {
+                TempData["Error"] = "Không tìm thấy đơn hàng.";
+                return RedirectToPage(new { id = id });
+            }
+
             var result = await _orderService.RejectOrderAsync(id, sellerId.Value, reason);
 
             if (!result)
@@ -128,6 +171,10 @@ public class DetailModel : PageModel
                 TempData["Error"] = "Không thể từ chối đơn hàng. Vui lòng kiểm tra lại trạng thái đơn hàng.";
                 return RedirectToPage(new { id = id });
             }
+
+            // Gửi SignalR notification
+            await _notificationService.NotifyOrderUpdateAsync(id, sellerId.Value, orderDetail.BuyerId, 
+                $"Đơn hàng đã bị từ chối: {reason}", "Cancelled");
 
             TempData["Success"] = $"Đơn hàng #{id} đã bị từ chối thành công.";
             return RedirectToPage("/Seller/Orders/Index");
@@ -158,6 +205,13 @@ public class DetailModel : PageModel
                 return RedirectToPage(new { id = id });
             }
 
+            var orderDetail = await _orderService.GetOrderDetailAsync(id, sellerId.Value);
+            if (orderDetail == null)
+            {
+                TempData["Error"] = "Không tìm thấy đơn hàng.";
+                return RedirectToPage(new { id = id });
+            }
+
             var result = await _orderService.CancelOrderAsync(id, sellerId.Value, reason);
 
             if (!result)
@@ -165,6 +219,10 @@ public class DetailModel : PageModel
                 TempData["Error"] = "Không thể hủy đơn hàng. Vui lòng kiểm tra lại trạng thái đơn hàng.";
                 return RedirectToPage(new { id = id });
             }
+
+            // Gửi SignalR notification
+            await _notificationService.NotifyOrderUpdateAsync(id, sellerId.Value, orderDetail.BuyerId, 
+                $"Đơn hàng đã bị hủy: {reason}", "Cancelled");
 
             TempData["Success"] = $"Đơn hàng #{id} đã được hủy thành công.";
             return RedirectToPage("/Seller/Orders/Index");

@@ -1,6 +1,7 @@
 using BLL.Constants;
 using BLL.DTOs;
 using BLL.Services;
+using GroupProject.Services;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
@@ -10,10 +11,12 @@ namespace GroupProject.Pages.BatteryListings;
 public class ReviewModel : PageModel
 {
     private readonly IBatteryListingService _batteryListingService;
+    private readonly INotificationService _notificationService;
 
-    public ReviewModel(IBatteryListingService batteryListingService)
+    public ReviewModel(IBatteryListingService batteryListingService, INotificationService notificationService)
     {
         _batteryListingService = batteryListingService;
+        _notificationService = notificationService;
     }
 
     [BindProperty]
@@ -111,7 +114,41 @@ public class ReviewModel : PageModel
 
         CanModerate = Listing.Status is ListingStatus.Pending or ListingStatus.NeedsRevision;
 
+        var listingName = $"{Listing.Brand} {Listing.BatteryType}";
+        var oldStatus = Listing.Status;
+        var sellerId = Listing.SellerId;
+
         var result = await action(staffId.Value);
+        
+        if (result.IsSuccess)
+        {
+            // Reload listing để lấy status mới
+            await LoadListing(id);
+            
+            if (Listing != null)
+            {
+                var newStatus = Listing.Status;
+                
+                // Gửi SignalR notification dựa trên status mới
+                // So sánh bằng string để đảm bảo chính xác
+                if (string.Equals(newStatus, ListingStatus.Approved, StringComparison.OrdinalIgnoreCase) && 
+                    !string.Equals(oldStatus, ListingStatus.Approved, StringComparison.OrdinalIgnoreCase))
+                {
+                    await _notificationService.NotifyListingApprovedAsync(id, "Battery", sellerId, listingName);
+                }
+                else if (string.Equals(newStatus, ListingStatus.Rejected, StringComparison.OrdinalIgnoreCase) && 
+                         !string.Equals(oldStatus, ListingStatus.Rejected, StringComparison.OrdinalIgnoreCase))
+                {
+                    await _notificationService.NotifyListingRejectedAsync(id, "Battery", sellerId, listingName, ModerationNote ?? "Không có lý do");
+                }
+                else if (string.Equals(newStatus, ListingStatus.NeedsRevision, StringComparison.OrdinalIgnoreCase) && 
+                         !string.Equals(oldStatus, ListingStatus.NeedsRevision, StringComparison.OrdinalIgnoreCase))
+                {
+                    await _notificationService.NotifyListingNeedsRevisionAsync(id, "Battery", sellerId, listingName, ModerationNote ?? "Cần chỉnh sửa");
+                }
+            }
+        }
+
         TempData[result.IsSuccess ? "FlashMessage" : "ErrorMessage"] = result.IsSuccess
             ? "Đã cập nhật trạng thái tin pin."
             : result.ErrorMessage;

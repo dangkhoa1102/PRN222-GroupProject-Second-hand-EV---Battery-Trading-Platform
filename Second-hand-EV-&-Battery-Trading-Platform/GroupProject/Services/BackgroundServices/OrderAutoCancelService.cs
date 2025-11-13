@@ -1,6 +1,8 @@
 using DAL.Models;
 using DAL.Repository;
+using GroupProject.Services;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 
@@ -14,15 +16,17 @@ namespace GroupProject.Services.BackgroundServices;
 public class OrderAutoCancelService : BackgroundService
 {
     private readonly ILogger<OrderAutoCancelService> _logger;
+    private readonly IServiceProvider _serviceProvider;
     // private readonly TimeSpan _checkInterval = TimeSpan.FromHours(1); // Kiểm tra mỗi 1 giờ (production)
     private readonly TimeSpan _checkInterval = TimeSpan.FromSeconds(30); // Kiểm tra mỗi 30 giây (để test nhanh hơn)
     
     // private readonly TimeSpan _cancelAfterHours = TimeSpan.FromHours(24); // Hủy sau 24h (production - đã comment)
     private readonly TimeSpan _cancelAfterHours = TimeSpan.FromMinutes(5); // Hủy sau 5 phút nếu buyer không xác nhận
 
-    public OrderAutoCancelService(ILogger<OrderAutoCancelService> logger)
+    public OrderAutoCancelService(ILogger<OrderAutoCancelService> logger, IServiceProvider serviceProvider)
     {
         _logger = logger;
+        _serviceProvider = serviceProvider;
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -82,6 +86,18 @@ public class OrderAutoCancelService : BackgroundService
 
                     await orderRepository.UpdateOrderAsync(order);
                     await orderRepository.SaveChangesAsync(cancellationToken);
+
+                    // Gửi SignalR notification
+                    using (var scope = _serviceProvider.CreateScope())
+                    {
+                        var notificationService = scope.ServiceProvider.GetRequiredService<INotificationService>();
+                        await notificationService.NotifyOrderUpdateAsync(
+                            order.OrderId, 
+                            order.SellerId, 
+                            order.BuyerId, 
+                            "Đơn hàng đã bị hủy tự động: Người mua không xác nhận nhận hàng sau 5 phút", 
+                            "Cancelled");
+                    }
 
                     cancelledCount++;
                     _logger.LogInformation(
