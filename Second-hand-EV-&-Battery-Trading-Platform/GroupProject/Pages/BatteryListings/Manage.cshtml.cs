@@ -1,6 +1,7 @@
 using BLL.Constants;
 using BLL.DTOs;
 using BLL.Services;
+using GroupProject.Services;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
@@ -10,10 +11,12 @@ namespace GroupProject.Pages.BatteryListings;
 public class ManageModel : PageModel
 {
     private readonly IBatteryListingService _batteryListingService;
+    private readonly INotificationService _notificationService;
 
-    public ManageModel(IBatteryListingService batteryListingService)
+    public ManageModel(IBatteryListingService batteryListingService, INotificationService notificationService)
     {
         _batteryListingService = batteryListingService;
+        _notificationService = notificationService;
     }
 
     public List<BatteryListingDto> Listings { get; private set; } = new();
@@ -55,7 +58,18 @@ public class ManageModel : PageModel
             return RedirectToPage("/Account/Login");
         }
 
+        var listing = await _batteryListingService.GetListingDetailAsync(id);
+        var listingName = listing != null ? $"{listing.Brand} {listing.BatteryType}" : $"Tin đăng #{id}";
+        var sellerId = listing?.SellerId ?? 0;
+
         var result = await _batteryListingService.DeleteListingAsAdminAsync(id, staffId.Value);
+        
+        if (result.IsSuccess && sellerId > 0)
+        {
+            await _notificationService.NotifyListingDeletedAsync(id, "Battery", sellerId, listingName);
+            await _notificationService.NotifyAdminAsync($"Đã xóa tin đăng: {listingName}", "info");
+        }
+
         TempData[result.IsSuccess ? "FlashMessage" : "ErrorMessage"] = result.IsSuccess
             ? "Đã gỡ tin pin khỏi hệ thống."
             : result.ErrorMessage;

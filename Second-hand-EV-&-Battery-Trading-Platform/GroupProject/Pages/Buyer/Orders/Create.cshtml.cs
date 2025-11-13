@@ -1,6 +1,7 @@
 using BLL.Constants;
 using BLL.DTOs;
 using BLL.Services;
+using GroupProject.Services;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
@@ -10,17 +11,23 @@ namespace GroupProject.Pages.Buyer.Orders;
 public class CreateModel : PageModel
 {
     private readonly IBuyerService _buyerService;
+    private readonly IBuyerOrderService _buyerOrderService;
     private readonly IVehicleListingService _vehicleListingService;
     private readonly IBatteryListingService _batteryListingService;
+    private readonly INotificationService _notificationService;
 
     public CreateModel(
         IBuyerService buyerService,
+        IBuyerOrderService buyerOrderService,
         IVehicleListingService vehicleListingService,
-        IBatteryListingService batteryListingService)
+        IBatteryListingService batteryListingService,
+        INotificationService notificationService)
     {
         _buyerService = buyerService;
+        _buyerOrderService = buyerOrderService;
         _vehicleListingService = vehicleListingService;
         _batteryListingService = batteryListingService;
+        _notificationService = notificationService;
     }
 
     [BindProperty]
@@ -176,6 +183,17 @@ public class CreateModel : PageModel
             var result = await _buyerService.CreateOrder(OrderDto);
             if (result)
             {
+                // Lấy thông tin buyer name để gửi notification
+                var buyerName = HttpContext.Session.GetString("FullName") ?? "Khách hàng";
+                
+                // Lấy orderId mới nhất từ buyer để gửi notification
+                var orders = await _buyerOrderService.GetBuyerOrdersAsync(userId.Value);
+                var newOrder = orders.OrderByDescending(o => o.CreatedDate).FirstOrDefault();
+                var orderId = newOrder?.OrderId ?? 0;
+                
+                // Gửi SignalR notification cho seller
+                await _notificationService.NotifyNewOrderAsync(orderId, OrderDto.SellerId, buyerName, OrderDto.TotalAmount);
+                
                 return RedirectToPage("/Buyer/Orders/Index", new { message = "Đơn hàng đã được tạo thành công. Vui lòng chờ người bán xác nhận." });
             }
             else

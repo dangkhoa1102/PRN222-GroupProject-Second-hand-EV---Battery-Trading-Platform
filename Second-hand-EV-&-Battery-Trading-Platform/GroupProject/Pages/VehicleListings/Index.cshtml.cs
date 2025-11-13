@@ -1,6 +1,7 @@
 using BLL.Constants;
 using BLL.DTOs;
 using BLL.Services;
+using GroupProject.Services;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
@@ -10,10 +11,12 @@ namespace GroupProject.Pages.VehicleListings;
 public class IndexModel : PageModel
 {
     private readonly IVehicleListingService _vehicleListingService;
+    private readonly INotificationService _notificationService;
 
-    public IndexModel(IVehicleListingService vehicleListingService)
+    public IndexModel(IVehicleListingService vehicleListingService, INotificationService notificationService)
     {
         _vehicleListingService = vehicleListingService;
+        _notificationService = notificationService;
     }
 
     public List<VehicleListingDto> Listings { get; private set; } = new();
@@ -82,7 +85,16 @@ public class IndexModel : PageModel
             return RedirectToPage("/Account/Login");
         }
 
+        var listing = await _vehicleListingService.GetListingDetailAsync(id);
+        var listingName = listing != null ? $"{listing.Brand} {listing.Model}" : $"Tin đăng #{id}";
+
         var result = await _vehicleListingService.SubmitForReviewAsync(sellerId.Value, id);
+        
+        if (result.IsSuccess)
+        {
+            await _notificationService.NotifyListingSubmittedAsync(id, "Vehicle", sellerId.Value, listingName);
+        }
+
         TempData[result.IsSuccess ? "FlashMessage" : "ErrorMessage"] = result.IsSuccess
             ? "Đã gửi tin đăng lên staff phê duyệt."
             : result.ErrorMessage;
@@ -98,7 +110,16 @@ public class IndexModel : PageModel
             return RedirectToPage("/Account/Login");
         }
 
+        var listing = await _vehicleListingService.GetListingDetailAsync(id);
+        var listingName = listing != null ? $"{listing.Brand} {listing.Model}" : $"Tin đăng #{id}";
+
         var result = await _vehicleListingService.HideListingAsync(sellerId.Value, id);
+        
+        if (result.IsSuccess)
+        {
+            await _notificationService.NotifyListingHiddenAsync(id, "Vehicle", sellerId.Value, listingName);
+        }
+
         TempData[result.IsSuccess ? "FlashMessage" : "ErrorMessage"] = result.IsSuccess
             ? "Đã tạm ẩn tin đăng."
             : result.ErrorMessage;
@@ -114,7 +135,16 @@ public class IndexModel : PageModel
             return RedirectToPage("/Account/Login");
         }
 
+        var listing = await _vehicleListingService.GetListingDetailAsync(id);
+        var listingName = listing != null ? $"{listing.Brand} {listing.Model}" : $"Tin đăng #{id}";
+
         var result = await _vehicleListingService.DeleteListingAsync(sellerId.Value, id);
+        
+        if (result.IsSuccess)
+        {
+            await _notificationService.NotifyListingDeletedAsync(id, "Vehicle", sellerId.Value, listingName);
+        }
+
         TempData[result.IsSuccess ? "FlashMessage" : "ErrorMessage"] = result.IsSuccess
             ? "Đã xóa tin đăng."
             : result.ErrorMessage;
