@@ -150,6 +150,56 @@ public class OrderService : IOrderService
         return true;
     }
 
+    public async Task<bool> ShipOrderAsync(int orderId, int sellerId, CancellationToken cancellationToken = default)
+    {
+        await using var context = new EVTradingPlatformContext();
+        var orderRepository = new OrderRepository(context);
+        var order = await orderRepository.GetOrderDetailAsync(orderId, sellerId, cancellationToken);
+
+        if (order == null)
+        {
+            return false;
+        }
+
+        if (order.OrderStatus != "Paid")
+        {
+            return false; // Chỉ có thể giao hàng khi đã chuyển tiền
+        }
+
+        // Chuyển sang trạng thái đang giao hàng
+        order.OrderStatus = "Delivering";
+        order.DeliveryDate = DateTime.Now; // Ngày bắt đầu giao hàng
+        await orderRepository.UpdateOrderAsync(order);
+        await orderRepository.SaveChangesAsync(cancellationToken);
+
+        return true;
+    }
+
+    public async Task<bool> CompleteShipmentAsync(int orderId, int sellerId, CancellationToken cancellationToken = default)
+    {
+        await using var context = new EVTradingPlatformContext();
+        var orderRepository = new OrderRepository(context);
+        var order = await orderRepository.GetOrderDetailAsync(orderId, sellerId, cancellationToken);
+
+        if (order == null)
+        {
+            return false;
+        }
+
+        if (order.OrderStatus != "Delivering")
+        {
+            return false; // Chỉ có thể hoàn thành giao hàng khi đang trong trạng thái Delivering
+        }
+
+        // Chuyển sang trạng thái đã giao hàng
+        order.OrderStatus = "Delivered";
+        // DeliveryDate đã được set khi ShipOrderAsync, không cần set lại
+        await orderRepository.UpdateOrderAsync(order);
+        await orderRepository.SaveChangesAsync(cancellationToken);
+
+        return true;
+    }
+
     public async Task<bool> RejectOrderAsync(int orderId, int sellerId, string? reason, CancellationToken cancellationToken = default)
     {
         await using var context = new EVTradingPlatformContext();
@@ -171,6 +221,38 @@ public class OrderService : IOrderService
         order.CancellationReason = reason ?? "Người bán từ chối đơn hàng";
         await orderRepository.UpdateOrderAsync(order);
         await orderRepository.SaveChangesAsync(cancellationToken);
+
+        return true;
+    }
+
+    public async Task<bool> CancelOrderAsync(int orderId, int sellerId, string? reason, CancellationToken cancellationToken = default)
+    {
+        await using var context = new EVTradingPlatformContext();
+        var orderRepository = new OrderRepository(context);
+        var order = await orderRepository.GetOrderDetailAsync(orderId, sellerId, cancellationToken);
+
+        if (order == null)
+        {
+            return false;
+        }
+
+        // Seller có thể hủy đơn hàng ở các trạng thái: Pending, Confirmed, Paid, Delivering
+        // Không thể hủy khi: Delivered (đang chờ buyer xác nhận), Completed, Cancelled
+        var cancellableStatuses = new[] { "Pending", "Confirmed", "Paid", "Delivering" };
+        if (!cancellableStatuses.Contains(order.OrderStatus))
+        {
+            return false; // Không thể hủy ở trạng thái này
+        }
+
+        // Hủy đơn hàng
+        order.OrderStatus = "Cancelled";
+        order.CancellationReason = reason ?? "Người bán hủy đơn hàng";
+        await orderRepository.UpdateOrderAsync(order);
+        await orderRepository.SaveChangesAsync(cancellationToken);
+
+        // Kích hoạt lại listing nếu đơn hàng bị hủy
+        var buyerRepository = new BuyerRepository();
+        await buyerRepository.ReactivateListingAsync(orderId);
 
         return true;
     }

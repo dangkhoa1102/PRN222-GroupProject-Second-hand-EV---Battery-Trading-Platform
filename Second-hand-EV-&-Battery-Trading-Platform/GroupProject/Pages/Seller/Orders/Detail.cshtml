@@ -177,6 +177,8 @@
                     {
                         "Pending" => "warning text-dark",
                         "Confirmed" => "info",
+                        "Paid" => "success",
+                        "Delivering" => "primary",
                         "Delivered" => "primary",
                         "Completed" => "success",
                         "Cancelled" => "danger",
@@ -186,6 +188,8 @@
                         {
                             "Pending" => "clock",
                             "Confirmed" => "check-circle",
+                            "Paid" => "credit-card",
+                            "Delivering" => "truck",
                             "Delivered" => "truck",
                             "Completed" => "check-circle-fill",
                             "Cancelled" => "x-circle",
@@ -215,52 +219,91 @@
                                 <i class="bi bi-check-circle"></i> Xác nhận đơn hàng
                             </button>
                         </form>
-                        <button type="button" class="btn btn-danger w-100" data-bs-toggle="modal" data-bs-target="#rejectModal">
-                            <i class="bi bi-x-circle"></i> Từ chối đơn hàng
+                    </div>
+                </div>
+            }
+            else if (Model.OrderDetail.CanShip)
+            {
+                <div class="card mb-3">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="bi bi-truck"></i> Thao tác</h5>
+                    </div>
+                    <div class="card-body">
+                        <form method="post" asp-page-handler="Ship" asp-route-id="@Model.OrderDetail.OrderId">
+                            <button type="submit" class="btn btn-primary w-100" onclick="return confirm('Xác nhận giao hàng cho đơn hàng #@Model.OrderDetail.OrderId?')">
+                                <i class="bi bi-truck"></i> Giao hàng
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            }
+            else if (Model.OrderDetail.CanCompleteShipment)
+            {
+                <div class="card mb-3">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="bi bi-check-circle"></i> Thao tác</h5>
+                    </div>
+                    <div class="card-body">
+                        <form method="post" asp-page-handler="CompleteShipment" asp-route-id="@Model.OrderDetail.OrderId">
+                            <button type="submit" class="btn btn-success w-100" onclick="return confirm('Xác nhận đã giao hàng xong cho đơn hàng #@Model.OrderDetail.OrderId? Người mua có 5 phút để xác nhận nhận hàng.')">
+                                <i class="bi bi-check-circle"></i> Giao hàng xong
+                            </button>
+                        </form>
+                        <p class="text-muted small mt-2 mb-0">Sau khi bấm, người mua có 5 phút để xác nhận nhận hàng.</p>
+                    </div>
+                </div>
+            }
+            
+            @if (Model.OrderDetail.CanSellerCancel)
+            {
+                <div class="card mb-3">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="bi bi-x-circle"></i> Hủy đơn hàng</h5>
+                    </div>
+                    <div class="card-body">
+                        <button type="button" class="btn btn-danger w-100" onclick="toggleCancelForm()">
+                            <i class="bi bi-x-circle"></i> Hủy đơn hàng
                         </button>
+                        <div id="cancelFormSection" class="mt-3 p-3 border rounded bg-light" style="display: none;">
+                            <form method="post" asp-page-handler="Cancel" asp-route-id="@Model.OrderDetail.OrderId" onsubmit="return validateCancelForm()">
+                                <div class="mb-3">
+                                    <label for="cancelReason" class="form-label">Lý do hủy đơn hàng <span class="text-danger">*</span></label>
+                                    <textarea id="cancelReason" name="reason" class="form-control" rows="3" required placeholder="Nhập lý do hủy đơn hàng..."></textarea>
+                                </div>
+                                <div class="d-flex gap-2">
+                                    <button type="submit" class="btn btn-danger">
+                                        <i class="bi bi-x-circle"></i> Xác nhận hủy
+                                    </button>
+                                    <button type="button" class="btn btn-secondary" onclick="toggleCancelForm()">
+                                        Hủy
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
                     </div>
                 </div>
             }
         </div>
     </div>
-
-    <!-- Modal Reject -->
-    @if (Model.OrderDetail.CanConfirmOrReject)
-    {
-        <div class="modal fade" id="rejectModal" tabindex="-1" aria-labelledby="rejectModalLabel" aria-hidden="true">
-            <div class="modal-dialog">
-                <div class="modal-content">
-                    <form method="post" asp-page-handler="Reject" asp-route-id="@Model.OrderDetail.OrderId">
-                        <div class="modal-header bg-danger text-white">
-                            <h5 class="modal-title" id="rejectModalLabel">
-                                <i class="bi bi-exclamation-triangle"></i> Từ chối đơn hàng #@Model.OrderDetail.OrderId
-                            </h5>
-                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-                        </div>
-                        <div class="modal-body">
-                            <div class="alert alert-warning">
-                                <strong>Cảnh báo:</strong> Đơn hàng sẽ bị hủy sau khi từ chối!
-                            </div>
-                            <p><strong>Người mua:</strong> @Model.OrderDetail.BuyerName</p>
-                            <p><strong>Sản phẩm:</strong> @Model.OrderDetail.ItemName</p>
-                            <p><strong>Số tiền:</strong> @Model.OrderDetail.TotalAmount.ToString("N0") đ</p>
-                            <hr />
-                            <div class="mb-3">
-                                <label for="reason" class="form-label">Lý do từ chối: <span class="text-danger">*</span></label>
-                                <textarea class="form-control" id="reason" name="reason" rows="3"
-                                          placeholder="Vui lòng nhập lý do từ chối đơn hàng..." required></textarea>
-                            </div>
-                        </div>
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
-                            <button type="submit" class="btn btn-danger">
-                                <i class="bi bi-x-circle"></i> Xác nhận từ chối
-                            </button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        </div>
-    }
 </div>
 
+<script>
+    function toggleCancelForm() {
+        var formSection = document.getElementById('cancelFormSection');
+        if (formSection.style.display === 'none') {
+            formSection.style.display = 'block';
+        } else {
+            formSection.style.display = 'none';
+            document.getElementById('cancelReason').value = '';
+        }
+    }
+    
+    function validateCancelForm() {
+        var reason = document.getElementById('cancelReason').value.trim();
+        if (!reason) {
+            alert('Vui lòng nhập lý do hủy đơn hàng.');
+            return false;
+        }
+        return confirm('Bạn có chắc chắn muốn hủy đơn hàng #@Model.OrderDetail.OrderId? Hành động này không thể hoàn tác.');
+    }
+</script>

@@ -19,5 +19,6 @@ namespace DAL.Repository
         Task<Order?> GetBuyerOrderDetailAsync(int orderId, int buyerId);
         Task<bool> UpdateOrderAsync(Order order);
         Task SaveChangesAsync();
+        Task ReactivateListingAsync(int orderId);
     }
 }

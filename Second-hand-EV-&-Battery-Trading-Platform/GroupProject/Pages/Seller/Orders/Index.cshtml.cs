@@ -14,10 +14,7 @@ public class IndexModel : PageModel
         _orderService = orderService;
     }
 
-    public List<OrderListDto> PendingOrders { get; set; } = new();
-    public List<OrderListDto> ConfirmedOrders { get; set; } = new();
-    public List<OrderListDto> CompletedOrders { get; set; } = new();
-    public List<OrderListDto> CancelledOrders { get; set; } = new();
+    public List<OrderListDto> AllOrders { get; set; } = new();
 
     [TempData]
     public string? StatusMessage { get; set; }
@@ -41,11 +38,8 @@ public class IndexModel : PageModel
 
         var orders = await _orderService.GetSellerOrdersAsync(sellerId.Value);
 
-        // Phân loại đơn hàng theo OrderStatus
-        PendingOrders = orders.Where(o => o.OrderStatus == "Pending").ToList();
-        ConfirmedOrders = orders.Where(o => o.OrderStatus == "Confirmed").ToList();
-        CompletedOrders = orders.Where(o => o.OrderStatus == "Completed").ToList();
-        CancelledOrders = orders.Where(o => o.OrderStatus == "Cancelled").ToList();
+        // Hiển thị tất cả đơn hàng, sắp xếp theo ngày tạo mới nhất
+        AllOrders = orders.OrderByDescending(o => o.CreatedDate).ToList();
 
         return Page();
     }
@@ -74,21 +68,74 @@ public class IndexModel : PageModel
     // Handler cho nút Reject
     public async Task<IActionResult> OnPostRejectAsync(int id, string? reason)
     {
-        var sellerId = HttpContext.Session.GetInt32("UserId");
-        if (!sellerId.HasValue)
+        try
         {
-            return RedirectToPage("/Account/Login");
-        }
+            var sellerId = HttpContext.Session.GetInt32("UserId");
+            if (!sellerId.HasValue)
+            {
+                TempData["Error"] = "Bạn cần đăng nhập để thực hiện thao tác này.";
+                return RedirectToPage("/Account/Login");
+            }
 
-        var result = await _orderService.RejectOrderAsync(id, sellerId.Value, reason);
+            // Validate reason
+            if (string.IsNullOrWhiteSpace(reason))
+            {
+                TempData["Error"] = "Vui lòng nhập lý do từ chối đơn hàng.";
+                return RedirectToPage();
+            }
 
-        if (!result)
-        {
-            TempData["Error"] = "Không thể từ chối đơn hàng. Vui lòng kiểm tra lại.";
+            var result = await _orderService.RejectOrderAsync(id, sellerId.Value, reason);
+
+            if (!result)
+            {
+                TempData["Error"] = "Không thể từ chối đơn hàng. Vui lòng kiểm tra lại trạng thái đơn hàng.";
+                return RedirectToPage();
+            }
+
+            TempData["Success"] = $"Đơn hàng #{id} đã bị từ chối thành công.";
             return RedirectToPage();
         }
+        catch (Exception ex)
+        {
+            TempData["Error"] = $"Đã xảy ra lỗi khi từ chối đơn hàng: {ex.Message}";
+            return RedirectToPage();
+        }
+    }
 
-        StatusMessage = $"Đơn hàng #{id} đã bị từ chối. Lý do: {reason ?? "Không rõ"}";
-        return RedirectToPage();
+    // Handler cho nút Cancel
+    public async Task<IActionResult> OnPostCancelAsync(int id, string? reason)
+    {
+        try
+        {
+            var sellerId = HttpContext.Session.GetInt32("UserId");
+            if (!sellerId.HasValue)
+            {
+                TempData["Error"] = "Bạn cần đăng nhập để thực hiện thao tác này.";
+                return RedirectToPage("/Account/Login");
+            }
+
+            // Validate reason
+            if (string.IsNullOrWhiteSpace(reason))
+            {
+                TempData["Error"] = "Vui lòng nhập lý do hủy đơn hàng.";
+                return RedirectToPage();
+            }
+
+            var result = await _orderService.CancelOrderAsync(id, sellerId.Value, reason);
+
+            if (!result)
+            {
+                TempData["Error"] = "Không thể hủy đơn hàng. Vui lòng kiểm tra lại trạng thái đơn hàng.";
+                return RedirectToPage();
+            }
+
+            TempData["Success"] = $"Đơn hàng #{id} đã được hủy thành công.";
+            return RedirectToPage();
+        }
+        catch (Exception ex)
+        {
+            TempData["Error"] = $"Đã xảy ra lỗi khi hủy đơn hàng: {ex.Message}";
+            return RedirectToPage();
+        }
     }
 }

@@ -24,6 +24,8 @@ public class OrderListDto
     {
         "Pending" => "Chờ xác nhận",
         "Confirmed" => "Đã xác nhận",
+        "Paid" => "Đã chuyển tiền",
+        "Delivering" => "Đang giao hàng",
         "Delivered" => "Đã giao hàng",
         "Completed" => "Hoàn thành",
         "Cancelled" => "Đã hủy",

@@ -36,6 +36,8 @@ public class OrderDetailDto
     {
         "Pending" => "Chờ xác nhận",
         "Confirmed" => "Đã xác nhận",
+        "Paid" => "Đã chuyển tiền",
+        "Delivering" => "Đang giao hàng",
         "Delivered" => "Đã giao hàng",
         "Completed" => "Hoàn thành",
         "Cancelled" => "Đã hủy",
@@ -45,9 +47,21 @@ public class OrderDetailDto
     // Check xem có thể confirm/reject không (cho seller)
     public bool CanConfirmOrReject => OrderStatus == "Pending";
     
+    // Check xem có thể chuyển tiền không (cho buyer)
+    public bool CanPay => OrderStatus == "Confirmed";
+    
+    // Check xem có thể giao hàng không (cho seller)
+    public bool CanShip => OrderStatus == "Paid";
+    
+    // Check xem có thể hoàn thành giao hàng không (cho seller)
+    public bool CanCompleteShipment => OrderStatus == "Delivering";
+    
     // Check xem có thể confirm delivery không (cho buyer)
-    public bool CanConfirmDelivery => OrderStatus == "Confirmed";
+    public bool CanConfirmDelivery => OrderStatus == "Delivered";
     
     // Check xem có thể cancel không (cho buyer)
     public bool CanCancel => OrderStatus == "Pending" || OrderStatus == "Confirmed";
+    
+    // Check xem seller có thể hủy đơn hàng không
+    public bool CanSellerCancel => OrderStatus == "Pending" || OrderStatus == "Confirmed" || OrderStatus == "Paid" || OrderStatus == "Delivering";
 }

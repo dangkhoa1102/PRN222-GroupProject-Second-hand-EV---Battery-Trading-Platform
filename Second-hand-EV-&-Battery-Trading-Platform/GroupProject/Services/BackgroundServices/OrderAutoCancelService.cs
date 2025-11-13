@@ -7,8 +7,9 @@ using Microsoft.Extensions.Logging;
 namespace GroupProject.Services.BackgroundServices;
 
 /// <summary>
-/// Background service để tự động hủy đơn hàng sau 1 phút (test) / 24h (production) nếu buyer không nhận hàng
-/// Service này chạy định kỳ mỗi 30 giây (test) / 1 giờ (production) để kiểm tra các đơn hàng
+/// Background service để tự động hủy đơn hàng sau 5 phút nếu buyer không xác nhận nhận hàng
+/// Service này chạy định kỳ mỗi 30 giây để kiểm tra các đơn hàng có trạng thái "Delivered"
+/// và đã được giao hơn 5 phút nhưng buyer chưa xác nhận nhận hàng
 /// </summary>
 public class OrderAutoCancelService : BackgroundService
 {
@@ -17,7 +18,7 @@ public class OrderAutoCancelService : BackgroundService
     private readonly TimeSpan _checkInterval = TimeSpan.FromSeconds(30); // Kiểm tra mỗi 30 giây (để test nhanh hơn)
     
     // private readonly TimeSpan _cancelAfterHours = TimeSpan.FromHours(24); // Hủy sau 24h (production - đã comment)
-    private readonly TimeSpan _cancelAfterHours = TimeSpan.FromMinutes(1); // Hủy sau 1 phút (để test)
+    private readonly TimeSpan _cancelAfterHours = TimeSpan.FromMinutes(5); // Hủy sau 5 phút nếu buyer không xác nhận
 
     public OrderAutoCancelService(ILogger<OrderAutoCancelService> logger)
     {
@@ -53,14 +54,13 @@ public class OrderAutoCancelService : BackgroundService
             await using var context = new EVTradingPlatformContext();
             var orderRepository = new OrderRepository(context);
 
-            // Lấy tất cả các đơn hàng có trạng thái "Confirmed" (seller đã xác nhận)
-            // và đã được confirm hơn 1 phút (hoặc 24h trong production) nhưng chưa có DeliveryDate
+            // Lấy tất cả các đơn hàng có trạng thái "Delivered" (seller đã giao hàng xong)
+            // và đã được delivered hơn 5 phút nhưng buyer chưa xác nhận nhận hàng
             var cutoffTime = DateTime.Now.Subtract(_cancelAfterHours);
             var ordersToCancel = await context.Orders
-                .Where(o => o.OrderStatus == "Confirmed" 
-                         && o.CompletedDate.HasValue 
-                         && o.CompletedDate.Value <= cutoffTime
-                         && !o.DeliveryDate.HasValue)
+                .Where(o => o.OrderStatus == "Delivered" 
+                         && o.DeliveryDate.HasValue 
+                         && o.DeliveryDate.Value <= cutoffTime)
                 .ToListAsync(cancellationToken);
 
             if (!ordersToCancel.Any())
@@ -78,17 +78,16 @@ public class OrderAutoCancelService : BackgroundService
                 {
                     // Tự động hủy đơn hàng
                     order.OrderStatus = "Cancelled";
-                    // order.CancellationReason = "Người mua không nhận hàng sau 24 giờ"; // Production
-                    order.CancellationReason = "Người mua không nhận hàng sau 1 phút"; // Test
+                    order.CancellationReason = "Người mua không xác nhận nhận hàng sau 5 phút";
 
                     await orderRepository.UpdateOrderAsync(order);
                     await orderRepository.SaveChangesAsync(cancellationToken);
 
                     cancelledCount++;
                     _logger.LogInformation(
-                        "Order {OrderId} has been auto-cancelled. Confirmed at: {ConfirmedDate}, Cancelled at: {CancelledDate}",
+                        "Order {OrderId} has been auto-cancelled. Delivered at: {DeliveredDate}, Cancelled at: {CancelledDate}",
                         order.OrderId,
-                        order.CompletedDate,
+                        order.DeliveryDate,
                         now);
                 }
                 catch (Exception ex)
@@ -99,7 +98,7 @@ public class OrderAutoCancelService : BackgroundService
 
             if (cancelledCount > 0)
             {
-                _logger.LogInformation("Auto-cancelled {Count} orders that were not delivered within {Hours} minutes.", cancelledCount, _cancelAfterHours.TotalMinutes);
+                _logger.LogInformation("Auto-cancelled {Count} orders that were not confirmed by buyer within {Minutes} minutes.", cancelledCount, _cancelAfterHours.TotalMinutes);
             }
         }
         catch (Exception ex)

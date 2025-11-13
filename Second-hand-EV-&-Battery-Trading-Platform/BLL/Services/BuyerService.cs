@@ -29,7 +29,7 @@ namespace BLL.Services
                     BuyerId = order.BuyerId,
                     SellerId = order.SellerId,
                     TotalAmount = order.TotalAmount,
-                    PaymentMethod = order.PaymentMethod ?? "Cash",
+                    PaymentMethod = null, // Sẽ được set khi buyer chuyển tiền
                     CreatedDate = DateTime.Now,
                     OrderStatus = "Pending"
                 };

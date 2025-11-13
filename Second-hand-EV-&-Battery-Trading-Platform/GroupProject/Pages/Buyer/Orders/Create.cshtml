@@ -46,12 +46,8 @@
                 <input type="hidden" asp-for="OrderDto.ItemType" />
                 <input type="hidden" asp-for="OrderDto.ItemId" />
 
-                <div class="mb-3">
-                    <label asp-for="OrderDto.PaymentMethod" class="form-label">Phương thức thanh toán <span class="text-danger">*</span></label>
-                    <select asp-for="OrderDto.PaymentMethod" class="form-select" asp-items="Model.PaymentMethods">
-                        <option value="">-- Chọn phương thức thanh toán --</option>
-                    </select>
-                    <span asp-validation-for="OrderDto.PaymentMethod" class="text-danger"></span>
+                <div class="alert alert-info">
+                    <i class="bi bi-info-circle"></i> Sau khi người bán xác nhận đơn hàng, bạn sẽ chọn phương thức thanh toán và chuyển tiền.
                 </div>
 
                 <div class="d-flex gap-2">

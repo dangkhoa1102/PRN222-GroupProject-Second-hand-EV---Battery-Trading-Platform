@@ -135,15 +135,44 @@ public class BuyerOrderService : IBuyerOrderService
             return false;
         }
 
+        // Check if order has been delivered
+        if (order.OrderStatus != "Delivered")
+        {
+            return false; // Order chưa được seller giao hàng xong
+        }
+
+        // Confirm delivery completed
+        order.OrderStatus = "Completed";
+        order.CompletedDate = DateTime.Now; // Ngày hoàn thành
+
+        return await buyerRepository.UpdateOrderAsync(order);
+    }
+
+    public async Task<bool> MarkAsPaidAsync(int orderId, int buyerId, string paymentMethod, CancellationToken cancellationToken = default)
+    {
+        var buyerRepository = new BuyerRepository();
+        var order = await buyerRepository.GetBuyerOrderDetailAsync(orderId, buyerId);
+
+        if (order == null)
+        {
+            return false;
+        }
+
         // Check if order is confirmed by seller
         if (order.OrderStatus != "Confirmed")
         {
             return false; // Order chưa được seller confirm
         }
 
-        // Confirm delivery
-        order.OrderStatus = "Completed";
-        order.DeliveryDate = DateTime.Now;
+        // Validate payment method
+        if (string.IsNullOrWhiteSpace(paymentMethod))
+        {
+            return false; // Payment method is required
+        }
+
+        // Mark as paid and set payment method
+        order.OrderStatus = "Paid";
+        order.PaymentMethod = paymentMethod;
 
         return await buyerRepository.UpdateOrderAsync(order);
     }
@@ -167,6 +196,9 @@ public class BuyerOrderService : IBuyerOrderService
         // Cancel order
         order.OrderStatus = "Cancelled";
         order.CancellationReason = reason ?? "Người mua hủy đơn hàng";
+
+        // Set IsActive = true for listing if order is cancelled
+        await buyerRepository.ReactivateListingAsync(orderId);
 
         return await buyerRepository.UpdateOrderAsync(order);
     }

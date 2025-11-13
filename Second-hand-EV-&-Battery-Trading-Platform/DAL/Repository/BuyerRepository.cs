@@ -10,50 +10,64 @@ namespace DAL.Repository
 {
     public class BuyerRepository : IBuyerRepository
     {
-        public async Task<bool> CreateOrder(Order order, string itemType, int itemId)
+    public async Task<bool> CreateOrder(Order order, string itemType, int itemId)
+    {
+        if(order == null)
         {
-            if(order == null)
-            {
-                throw new ArgumentNullException(nameof(order));
-            }
-            await using var context = new EVTradingPlatformContext();
-            
-            // Set order status
-            order.OrderStatus = "Pending";
-            order.CreatedDate = DateTime.Now;
-            
-            await context.Orders.AddAsync(order);
-            await context.SaveChangesAsync();
-            
-            // Create VehicleOrder or BatteryOrder
-            if (itemType == "Vehicle")
-            {
-                var vehicleOrder = new VehicleOrder
-                {
-                    OrderId = order.OrderId,
-                    VehicleId = itemId
-                };
-                await context.VehicleOrders.AddAsync(vehicleOrder);
-            }
-            else if (itemType == "Battery")
-            {
-                var batteryOrder = new BatteryOrder
-                {
-                    OrderId = order.OrderId,
-                    BatteryId = itemId
-                };
-                await context.BatteryOrders.AddAsync(batteryOrder);
-            }
-            
-            if(await context.SaveChangesAsync() > 0)
-            {
-                return true;
-            }
-            else
-            {
-                return false;
-            }
+            throw new ArgumentNullException(nameof(order));
         }
+        await using var context = new EVTradingPlatformContext();
+        
+        // Set order status
+        order.OrderStatus = "Pending";
+        order.CreatedDate = DateTime.Now;
+        
+        await context.Orders.AddAsync(order);
+        await context.SaveChangesAsync();
+        
+        // Create VehicleOrder or BatteryOrder and set IsActive = false for listing
+        if (itemType == "Vehicle")
+        {
+            var vehicle = await context.Vehicles.FindAsync(itemId);
+            if (vehicle != null)
+            {
+                vehicle.IsActive = false;
+                vehicle.UpdatedDate = DateTime.Now;
+            }
+            
+            var vehicleOrder = new VehicleOrder
+            {
+                OrderId = order.OrderId,
+                VehicleId = itemId
+            };
+            await context.VehicleOrders.AddAsync(vehicleOrder);
+        }
+        else if (itemType == "Battery")
+        {
+            var battery = await context.Batteries.FindAsync(itemId);
+            if (battery != null)
+            {
+                battery.IsActive = false;
+                battery.UpdatedDate = DateTime.Now;
+            }
+            
+            var batteryOrder = new BatteryOrder
+            {
+                OrderId = order.OrderId,
+                BatteryId = itemId
+            };
+            await context.BatteryOrders.AddAsync(batteryOrder);
+        }
+        
+        if(await context.SaveChangesAsync() > 0)
+        {
+            return true;
+        }
+        else
+        {
+            return false;
+        }
+    }
         
         public async Task<List<Order>> GetBuyerOrdersAsync(int buyerId)
         {
@@ -149,6 +163,37 @@ namespace DAL.Repository
             await using var context = new EVTradingPlatformContext();
             var rs = await context.Vehicles.Where(b => b.Brand.Contains(keyword) || b.Model.Contains(keyword)).ToListAsync();
             return rs;
+        }
+
+        public async Task ReactivateListingAsync(int orderId)
+        {
+            await using var context = new EVTradingPlatformContext();
+            
+            // Check if order has VehicleOrder
+            var vehicleOrder = await context.VehicleOrders
+                .Include(vo => vo.Vehicle)
+                .FirstOrDefaultAsync(vo => vo.OrderId == orderId);
+            
+            if (vehicleOrder != null && vehicleOrder.Vehicle != null)
+            {
+                vehicleOrder.Vehicle.IsActive = true;
+                vehicleOrder.Vehicle.UpdatedDate = DateTime.Now;
+            }
+            else
+            {
+                // Check if order has BatteryOrder
+                var batteryOrder = await context.BatteryOrders
+                    .Include(bo => bo.Battery)
+                    .FirstOrDefaultAsync(bo => bo.OrderId == orderId);
+                
+                if (batteryOrder != null && batteryOrder.Battery != null)
+                {
+                    batteryOrder.Battery.IsActive = true;
+                    batteryOrder.Battery.UpdatedDate = DateTime.Now;
+                }
+            }
+            
+            await context.SaveChangesAsync();
         }
     }
 }

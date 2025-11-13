@@ -1,11 +1,26 @@
 using BLL.Services;
 using BLL.Configuration;
 using GroupProject.Services.BackgroundServices;
+using System.Text;
+
+// Set UTF-8 encoding for console and response
+Console.OutputEncoding = Encoding.UTF8;
+Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
-builder.Services.AddRazorPages();
+builder.Services.AddRazorPages()
+    .AddRazorPagesOptions(options =>
+    {
+        // Ensure UTF-8 encoding for Razor pages
+    });
+
+// Configure encoding
+builder.Services.Configure<Microsoft.AspNetCore.Http.Features.FormOptions>(options =>
+{
+    options.MultipartBodyLengthLimit = 10485760; // 10MB
+});
 builder.Services.AddDistributedMemoryCache();
 builder.Services.AddSession(options =>
 {
@@ -39,6 +54,20 @@ if (!app.Environment.IsDevelopment())
     app.UseExceptionHandler("/Error");
     app.UseHsts();
 }
+
+// Configure encoding for responses
+app.Use(async (context, next) =>
+{
+    if (string.IsNullOrEmpty(context.Response.ContentType))
+    {
+        context.Response.ContentType = "text/html; charset=utf-8";
+    }
+    else if (!context.Response.ContentType.Contains("charset"))
+    {
+        context.Response.ContentType += "; charset=utf-8";
+    }
+    await next();
+});
 
 app.UseHttpsRedirection();
 app.UseStaticFiles();

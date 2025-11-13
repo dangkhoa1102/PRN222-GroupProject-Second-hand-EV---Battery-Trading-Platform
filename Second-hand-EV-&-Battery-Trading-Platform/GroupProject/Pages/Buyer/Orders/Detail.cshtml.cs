@@ -60,6 +60,53 @@ public class DetailModel : PageModel
         return Page();
     }
 
+    // Handler cho nút Mark As Paid
+    public async Task<IActionResult> OnPostMarkAsPaidAsync(int id, string paymentMethod)
+    {
+        var userId = HttpContext.Session.GetInt32("UserId");
+        var role = HttpContext.Session.GetString("Role");
+
+        // Kiểm tra login
+        if (!userId.HasValue)
+        {
+            return RedirectToPage("/Account/Login");
+        }
+
+        // Kiểm tra role
+        if (role != RoleConstants.Customer)
+        {
+            ErrorMessage = "Chỉ khách hàng mới có thể chuyển tiền.";
+            return RedirectToPage(new { id = id });
+        }
+
+        // Validate payment method
+        if (string.IsNullOrWhiteSpace(paymentMethod))
+        {
+            ErrorMessage = "Vui lòng chọn phương thức thanh toán.";
+            return RedirectToPage(new { id = id });
+        }
+
+        try
+        {
+            var result = await _buyerOrderService.MarkAsPaidAsync(id, userId.Value, paymentMethod);
+            if (result)
+            {
+                StatusMessage = "Đã xác nhận chuyển tiền thành công! Người bán sẽ bắt đầu giao hàng.";
+                return RedirectToPage(new { id = id, message = StatusMessage });
+            }
+            else
+            {
+                ErrorMessage = "Không thể xác nhận chuyển tiền. Đơn hàng chưa được người bán xác nhận hoặc đã được xử lý.";
+                return RedirectToPage(new { id = id });
+            }
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = $"Lỗi: {ex.Message}";
+            return RedirectToPage(new { id = id });
+        }
+    }
+
     // Handler cho nút Confirm Delivery
     public async Task<IActionResult> OnPostConfirmDeliveryAsync(int id)
     {
@@ -84,12 +131,12 @@ public class DetailModel : PageModel
             var result = await _buyerOrderService.ConfirmDeliveryAsync(id, userId.Value);
             if (result)
             {
-                StatusMessage = "Đã xác nhận nhận hàng thành công! Đơn hàng đã hoàn thành.";
+                StatusMessage = "Đã xác nhận hoàn thành đơn hàng thành công!";
                 return RedirectToPage(new { id = id, message = StatusMessage });
             }
             else
             {
-                ErrorMessage = "Không thể xác nhận nhận hàng. Đơn hàng chưa được người bán xác nhận hoặc đã được xử lý.";
+                ErrorMessage = "Không thể xác nhận hoàn thành. Đơn hàng chưa được người bán giao hàng hoặc đã được xử lý.";
                 return RedirectToPage(new { id = id });
             }
         }

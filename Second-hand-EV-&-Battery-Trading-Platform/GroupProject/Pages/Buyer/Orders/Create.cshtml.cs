@@ -4,7 +4,6 @@ using BLL.Services;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
-using Microsoft.AspNetCore.Mvc.Rendering;
 
 namespace GroupProject.Pages.Buyer.Orders;
 
@@ -34,14 +33,6 @@ public class CreateModel : PageModel
     public int SellerId { get; private set; }
     public string SellerName { get; private set; } = string.Empty;
     public string? ErrorMessage { get; private set; }
-
-    public List<SelectListItem> PaymentMethods { get; private set; } = new()
-    {
-        new SelectListItem { Value = "Cash", Text = "Tiền mặt" },
-        new SelectListItem { Value = "BankTransfer", Text = "Chuyển khoản ngân hàng" },
-        new SelectListItem { Value = "CreditCard", Text = "Thẻ tín dụng" },
-        new SelectListItem { Value = "E-Wallet", Text = "Ví điện tử" }
-    };
 
     public async Task<IActionResult> OnGetAsync()
     {
@@ -139,7 +130,7 @@ public class CreateModel : PageModel
         OrderDto.TotalAmount = ItemPrice;
         OrderDto.ItemType = ItemType;
         OrderDto.ItemId = ItemId;
-        OrderDto.PaymentMethod = "Cash"; // Mặc định
+        // PaymentMethod sẽ được set sau khi seller xác nhận
 
         return Page();
     }
@@ -170,12 +161,6 @@ public class CreateModel : PageModel
             // Reload thông tin sản phẩm từ ItemType và ItemId
             await LoadItemInfoAsync();
             return Page();
-        }
-
-        // Validate PaymentMethod
-        if (string.IsNullOrWhiteSpace(OrderDto.PaymentMethod))
-        {
-            ModelState.AddModelError(nameof(OrderDto.PaymentMethod), "Vui lòng chọn phương thức thanh toán.");
         }
 
         if (!ModelState.IsValid)

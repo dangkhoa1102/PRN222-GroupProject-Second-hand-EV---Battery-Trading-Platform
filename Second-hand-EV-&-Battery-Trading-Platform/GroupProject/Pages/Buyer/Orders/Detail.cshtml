@@ -39,6 +39,8 @@
                         {
                             "Pending" => "warning",
                             "Confirmed" => "info",
+                            "Paid" => "primary",
+                            "Delivering" => "primary",
                             "Delivered" => "primary",
                             "Completed" => "success",
                             "Cancelled" => "danger",
@@ -117,22 +119,45 @@
                     <dd class="col-6 text-end"><strong class="text-success">@Model.OrderDetail.TotalAmount.ToString("N0") đ</strong></dd>
 
                     <dt class="col-6">Thanh toán</dt>
-                    <dd class="col-6 text-end">@Model.OrderDetail.PaymentMethod</dd>
+                    <dd class="col-6 text-end">@(string.IsNullOrEmpty(Model.OrderDetail.PaymentMethod) ? "Chưa chọn" : Model.OrderDetail.PaymentMethod)</dd>
                 </dl>
             </div>
 
             <!-- Thao tác -->
-            @if (Model.OrderDetail.CanConfirmDelivery)
+            @if (Model.OrderDetail.CanPay)
+            {
+                <div class="card-modern mb-4">
+                    <h3 class="h5 mb-3">Thanh toán</h3>
+                    <form method="post" asp-page-handler="MarkAsPaid" class="mb-2" onsubmit="return confirm('Xác nhận đã chuyển tiền cho đơn hàng #@Model.OrderDetail.OrderId?')">
+                        <input type="hidden" name="id" value="@Model.OrderDetail.OrderId" />
+                        <div class="mb-3">
+                            <label for="paymentMethod" class="form-label">Phương thức thanh toán <span class="text-danger">*</span></label>
+                            <select id="paymentMethod" name="paymentMethod" class="form-select" required>
+                                <option value="">-- Chọn phương thức thanh toán --</option>
+                                <option value="Cash">Tiền mặt</option>
+                                <option value="BankTransfer">Chuyển khoản ngân hàng</option>
+                                <option value="CreditCard">Thẻ tín dụng</option>
+                                <option value="E-Wallet">Ví điện tử</option>
+                            </select>
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100">
+                            <i class="bi bi-credit-card"></i> Xác nhận đã chuyển tiền
+                        </button>
+                    </form>
+                    <p class="text-muted small mb-0">Sau khi chuyển tiền, người bán sẽ bắt đầu giao hàng.</p>
+                </div>
+            }
+            else if (Model.OrderDetail.CanConfirmDelivery)
             {
                 <div class="card-modern mb-4">
                     <h3 class="h5 mb-3">Thao tác</h3>
-                    <form method="post" asp-page-handler="ConfirmDelivery" class="mb-2">
+                    <form method="post" asp-page-handler="ConfirmDelivery" class="mb-2" onsubmit="return confirm('Xác nhận hoàn thành đơn hàng #@Model.OrderDetail.OrderId?')">
                         <input type="hidden" name="id" value="@Model.OrderDetail.OrderId" />
                         <button type="submit" class="btn btn-success w-100">
-                            <i class="bi bi-check-circle"></i> Xác nhận nhận hàng
+                            <i class="bi bi-check-circle"></i> Xác nhận hoàn thành đơn hàng
                         </button>
                     </form>
-                    <p class="text-muted small mb-0">Xác nhận khi bạn đã nhận được hàng từ người bán.</p>
+                    <p class="text-muted small mb-0">Xác nhận khi bạn đã nhận được hàng và hài lòng với sản phẩm.</p>
                 </div>
             }
 
