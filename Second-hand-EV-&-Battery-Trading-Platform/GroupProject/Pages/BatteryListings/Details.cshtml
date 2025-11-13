@@ -33,7 +33,24 @@
                 </div>
                 <dl class="row mb-0">
                     <dt class="col-sm-5">Người đăng</dt>
-                    <dd class="col-sm-7">@Model.Listing.SellerName</dd>
+                    <dd class="col-sm-7">
+                        @Model.Listing.SellerName
+                        @if (Model.SellerReviewSummary != null && Model.SellerReviewSummary.TotalReviews > 0)
+                        {
+                            <div class="mt-1">
+                                @for (int i = 1; i <= 5; i++)
+                                {
+                                    <span class="fs-6 @(i <= Math.Round(Model.SellerReviewSummary.AverageRating) ? "text-warning" : "text-muted")">★</span>
+                                }
+                                <span class="small text-muted ms-1">
+                                    (@Model.SellerReviewSummary.AverageRating.ToString("F1")) 
+                                    <a asp-page="/Reviews/UserReviews" asp-route-userId="@Model.Listing.SellerId" class="text-decoration-none">
+                                        @Model.SellerReviewSummary.TotalReviews đánh giá
+                                    </a>
+                                </span>
+                            </div>
+                        }
+                    </dd>
 
                     <dt class="col-sm-5">Email liên hệ</dt>
                     <dd class="col-sm-7">@(string.IsNullOrWhiteSpace(Model.Listing.SellerEmail) ? "—" : Model.Listing.SellerEmail)</dd>

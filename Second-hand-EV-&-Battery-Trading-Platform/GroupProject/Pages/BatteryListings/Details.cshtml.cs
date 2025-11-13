@@ -12,11 +12,13 @@ public class DetailsModel : PageModel
 {
     private readonly IBatteryListingService _batteryListingService;
     private readonly IBuyerService _buyerService;
+    private readonly IReviewService _reviewService;
 
-    public DetailsModel(IBatteryListingService batteryListingService, IBuyerService buyerService)
+    public DetailsModel(IBatteryListingService batteryListingService, IBuyerService buyerService, IReviewService reviewService)
     {
         _batteryListingService = batteryListingService;
         _buyerService = buyerService;
+        _reviewService = reviewService;
     }
 
     public BatteryListingDetailDto? Listing { get; private set; }
@@ -26,6 +28,7 @@ public class DetailsModel : PageModel
     public bool IsBuyer { get; private set; }
     public bool CanPurchase { get; private set; }
     public string? ReturnUrl { get; private set; }
+    public UserReviewSummaryDto? SellerReviewSummary { get; private set; }
 
     public async Task<IActionResult> OnGetAsync(int id, string? returnUrl = null)
     {
@@ -117,6 +120,21 @@ public class DetailsModel : PageModel
         }
 
         Listing = listing;
+
+        // Lấy thông tin đánh giá của seller từ ReviewService (từ main)
+        if (listing.SellerId > 0)
+        {
+            try
+            {
+                SellerReviewSummary = await _reviewService.GetUserReviewSummaryAsync(listing.SellerId);
+            }
+            catch
+            {
+                // Nếu không có review summary, để null
+                SellerReviewSummary = null;
+            }
+        }
+
         return Page();
     }
 

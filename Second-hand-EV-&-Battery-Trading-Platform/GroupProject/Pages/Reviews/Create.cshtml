@@ -1,0 +1,187 @@
+@page "{orderId:int}"
+@model GroupProject.Pages.Reviews.CreateModel
+@{
+    ViewData["Title"] = "Đánh giá người bán";
+}
+
+<div class="page-header">
+    <h1>Đánh giá người bán</h1>
+    <a class="btn btn-link" asp-page="OrderHistory">Quay lại lịch sử đơn hàng</a>
+</div>
+
+@if (!string.IsNullOrEmpty(Model.ErrorMessage))
+{
+    <div class="alert alert-danger">@Model.ErrorMessage</div>
+}
+
+@if (!string.IsNullOrEmpty(Model.SuccessMessage))
+{
+    <div class="alert alert-success">@Model.SuccessMessage</div>
+}
+
+<div class="card-modern">
+    <form method="post">
+        <input type="hidden" asp-for="Input.OrderId" />
+
+        <div class="mb-4">
+            <label asp-for="Input.Rating" class="form-label fw-semibold">
+                Đánh giá <span class="text-danger">*</span>
+            </label>
+            <div class="rating-input">
+                @for (int i = 1; i <= 5; i++)
+                {
+                    <input type="radio" asp-for="Input.Rating" value="@i" id="rating@i" class="d-none" data-rating="@i" />
+                    <label for="rating@i" class="star-label" data-rating="@i">★</label>
+                }
+            </div>
+            <span asp-validation-for="Input.Rating" class="text-danger"></span>
+        </div>
+
+        <div class="mb-4">
+            <label asp-for="Input.Comment" class="form-label fw-semibold">
+                Nhận xét
+            </label>
+            <textarea asp-for="Input.Comment" class="form-control" rows="5" 
+                      placeholder="Chia sẻ trải nghiệm của bạn về sản phẩm và người bán..."></textarea>
+            <span asp-validation-for="Input.Comment" class="text-danger"></span>
+            <small class="form-text text-muted">Tối đa 1000 ký tự</small>
+        </div>
+
+        <div class="d-flex gap-2">
+            <button type="submit" class="btn btn-primary">Gửi đánh giá</button>
+            <a asp-page="OrderHistory" class="btn btn-outline-secondary">Hủy</a>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        (function() {
+            const ratingInput = document.querySelector('.rating-input');
+            const starLabels = document.querySelectorAll('.star-label');
+            const radioInputs = document.querySelectorAll('input[name="Input.Rating"]');
+            let selectedRating = 0;
+            let isHovering = false;
+
+            // Function to highlight stars based on rating value
+            function highlightStars(rating, isPreview = false) {
+                const ratingValue = parseInt(rating) || 0;
+                // Remove all active classes first
+                starLabels.forEach(label => {
+                    label.classList.remove('active');
+                    label.classList.remove('preview');
+                });
+                
+                // Add active class to stars up to the selected rating
+                starLabels.forEach((label, index) => {
+                    const starNumber = index + 1;
+                    if (starNumber <= ratingValue && ratingValue > 0) {
+                        if (isPreview) {
+                            label.classList.add('preview');
+                        } else {
+                            label.classList.add('active');
+                        }
+                    }
+                });
+            }
+
+            // Handle label click - this is the main interaction
+            starLabels.forEach((label, index) => {
+                const starNumber = index + 1;
+                // Find radio button by data-rating attribute
+                const dataRating = label.getAttribute('data-rating');
+                const radio = Array.from(radioInputs).find(r => r.getAttribute('data-rating') === dataRating);
+                
+                if (!radio) {
+                    console.error('Radio not found for star', starNumber, 'dataRating:', dataRating);
+                    return;
+                }
+                
+                label.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    
+                    // Uncheck all radios first
+                    radioInputs.forEach(r => r.checked = false);
+                    
+                    // Check the selected radio
+                    radio.checked = true;
+                    selectedRating = starNumber;
+                    
+                    // Highlight stars
+                    highlightStars(starNumber, false);
+                    
+                    // Trigger change event
+                    radio.dispatchEvent(new Event('change', { bubbles: true }));
+                });
+            });
+
+            // Handle hover - show preview only when hovering (disabled for now to avoid conflicts)
+            // starLabels.forEach((label, index) => {
+            //     const starNumber = index + 1;
+            //     
+            //     label.addEventListener('mouseenter', function() {
+            //         isHovering = true;
+            //         highlightStars(starNumber, true);
+            //     });
+            // });
+
+            // Reset to selected rating when mouse leaves
+            ratingInput.addEventListener('mouseleave', function() {
+                isHovering = false;
+                if (selectedRating > 0) {
+                    highlightStars(selectedRating, false);
+                } else {
+                    starLabels.forEach(label => {
+                        label.classList.remove('active');
+                        label.classList.remove('preview');
+                    });
+                }
+            });
+
+            // Handle radio button change (backup)
+            radioInputs.forEach(radio => {
+                radio.addEventListener('change', function() {
+                    selectedRating = parseInt(this.value) || 0;
+                    highlightStars(selectedRating, false);
+                });
+            });
+
+            // Initialize on page load
+            const checkedRadio = document.querySelector('input[name="Input.Rating"]:checked');
+            if (checkedRadio) {
+                selectedRating = parseInt(checkedRadio.value) || 0;
+                highlightStars(selectedRating, false);
+            }
+        })();
+    </script>
+}
+
+<style>
+    .rating-input {
+        display: flex;
+        flex-direction: row;
+        justify-content: flex-start;
+        gap: 5px;
+    }
+
+    .star-label {
+        font-size: 2rem;
+        color: #ddd;
+        cursor: pointer;
+        transition: color 0.2s;
+        user-select: none;
+    }
+
+    /* Only highlight stars with active class (set by JavaScript) */
+    .star-label.active {
+        color: #ffc107 !important;
+    }
+
+    /* Preview effect when hovering */
+    .star-label.preview {
+        color: #ffc107;
+    }
+</style>
+

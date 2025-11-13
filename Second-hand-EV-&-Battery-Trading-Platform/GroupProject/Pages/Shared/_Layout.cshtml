@@ -44,6 +44,8 @@
                                     <ul class="dropdown-menu dropdown-menu-center" aria-labelledby="customerNavDropdown">
                                         <li><a class="dropdown-item" asp-page="/VehicleListings/Index">Tin xe của tôi</a></li>
                                         <li><a class="dropdown-item" asp-page="/BatteryListings/Index">Tin pin của tôi</a></li>
+                                        <li><hr class="dropdown-divider" /></li>
+                                        <li><a class="dropdown-item" asp-page="/Reviews/OrderHistory">Lịch sử đơn hàng</a></li>
                                     </ul>
                                 </div>
                                 <a class="btn btn-outline-light" asp-page="/Buyer/Orders/Index">
@@ -82,6 +84,19 @@
                                         <li><a class="dropdown-item" asp-page="/BatteryListings/Manage">Tất cả tin pin</a></li>
                                     </ul>
                                 </div>
+                                <div class="dropdown nav-dropdown">
+                                    <button class="btn btn-outline-light dropdown-toggle" type="button" id="adminTransactionsDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                                        Quản lý chung
+                                    </button>
+                                    <ul class="dropdown-menu dropdown-menu-center" aria-labelledby="adminTransactionsDropdown">
+                                        <li><a class="dropdown-item" asp-page="/Admin/OrderTransactionsAdmin">Tất cả giao dịch</a></li>
+                                        <li><a class="dropdown-item" asp-page="/Admin/VehicleTransactionsAdmin">Giao dịch xe</a></li>
+                                        <li><a class="dropdown-item" asp-page="/Admin/BatteryTransactionsAdmin">Giao dịch pin</a></li>
+                                        <li><a class="dropdown-item" asp-page="/Admin/ReviewAdmin">Đánh giá của khách</a></li>
+
+                                    </ul>
+                                </div>
+
                             }
                         </div>
                     }

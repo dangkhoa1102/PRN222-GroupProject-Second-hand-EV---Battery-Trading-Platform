@@ -1,4 +1,5 @@
 using BLL.Services;
+using BLL.Configuration;
 using GroupProject.Services.BackgroundServices;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -17,20 +18,25 @@ builder.Services.AddSession(options =>
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IVehicleListingService, VehicleListingService>();
 builder.Services.AddScoped<IBatteryListingService, BatteryListingService>();
+
+// Services from HEAD branch (buyer and order services)
 builder.Services.AddScoped<IBuyerService, BuyerService>();
 builder.Services.AddScoped<IOrderService, OrderService>();
 builder.Services.AddScoped<IBuyerOrderService, BuyerOrderService>();
 
-// Register Background Services
+// Services from main branch (review and admin services)
+builder.Services.AddScoped<IReviewService, ReviewService>();
+builder.Services.AddAdminTransactionService(builder.Configuration);
+builder.Services.AddScoped<IAdminReviewService, AdminReviewService>();
+
+// Register Background Services from HEAD branch
 builder.Services.AddHostedService<OrderAutoCancelService>();
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Error");
-    // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
     app.UseHsts();
 }
 
