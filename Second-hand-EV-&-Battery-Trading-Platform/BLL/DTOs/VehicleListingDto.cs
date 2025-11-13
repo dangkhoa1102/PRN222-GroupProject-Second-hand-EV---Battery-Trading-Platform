@@ -9,6 +9,8 @@ public class VehicleListingDto
     public decimal Price { get; set; }
     public string Condition { get; set; } = string.Empty;
     public string Status { get; set; } = string.Empty;
+    public int SellerId { get; set; }
+    public DateTime? CreatedDate { get; set; }
     public string? SellerName { get; set; }
     public string? SellerEmail { get; set; }
     public string? SellerPhoneNumber { get; set; }
