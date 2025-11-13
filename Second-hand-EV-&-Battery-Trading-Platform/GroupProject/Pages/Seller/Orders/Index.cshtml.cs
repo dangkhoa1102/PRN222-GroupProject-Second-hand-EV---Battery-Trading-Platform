@@ -1,6 +1,5 @@
 using BLL.DTOs;
-using DAL.Models;
-using DAL.Repository;
+using BLL.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 
@@ -8,15 +7,17 @@ namespace GroupProject.Pages.Seller.Orders;
 
 public class IndexModel : PageModel
 {
-    private readonly EVTradingPlatformContext _context;
+    private readonly IOrderService _orderService;
 
-    public IndexModel(EVTradingPlatformContext context)
+    public IndexModel(IOrderService orderService)
     {
-        _context = context;
+        _orderService = orderService;
     }
 
     public List<OrderListDto> PendingOrders { get; set; } = new();
+    public List<OrderListDto> ConfirmedOrders { get; set; } = new();
     public List<OrderListDto> CompletedOrders { get; set; } = new();
+    public List<OrderListDto> CancelledOrders { get; set; } = new();
 
     [TempData]
     public string? StatusMessage { get; set; }
@@ -38,50 +39,13 @@ public class IndexModel : PageModel
             return RedirectToPage("/Index");
         }
 
-        var orderRepository = new OrderRepository(_context);
-        var orders = await orderRepository.GetSellerOrdersAsync(sellerId.Value);
+        var orders = await _orderService.GetSellerOrdersAsync(sellerId.Value);
 
-        // Chuyển đổi sang DTO và phân loại
-        var orderDtos = orders.Select(o =>
-        {
-            string orderType = "";
-            int itemId = 0;
-            string itemName = "";
-
-            // Xác định loại order: Vehicle hoặc Battery
-            if (o.VehicleOrder != null)
-            {
-                orderType = "Vehicle";
-                itemId = o.VehicleOrder.VehicleId;
-                var vehicle = o.VehicleOrder.Vehicle;
-                itemName = vehicle != null ? $"{vehicle.Brand} {vehicle.Model}" : "Xe điện";
-            }
-            else if (o.BatteryOrder != null)
-            {
-                orderType = "Battery";
-                itemId = o.BatteryOrder.BatteryId;
-                var battery = o.BatteryOrder.Battery;
-                itemName = battery != null ? $"{battery.Brand} {battery.BatteryType}" : "Pin";
-            }
-
-            return new OrderListDto
-            {
-                OrderId = o.OrderId,
-                OrderType = orderType,
-                ItemId = itemId,
-                ItemName = itemName,
-                BuyerName = o.Buyer?.FullName ?? "Không rõ",
-                BuyerEmail = o.Buyer?.Email ?? "",
-                TotalAmount = o.TotalAmount,
-                PaymentMethod = o.PaymentMethod ?? "Chưa chọn",
-                CreatedDate = o.CreatedDate,
-                CompletedDate = o.CompletedDate
-            };
-        }).ToList();
-
-        // Phân loại đơn hàng
-        PendingOrders = orderDtos.Where(o => !o.CompletedDate.HasValue).ToList();
-        CompletedOrders = orderDtos.Where(o => o.CompletedDate.HasValue).ToList();
+        // Phân loại đơn hàng theo OrderStatus
+        PendingOrders = orders.Where(o => o.OrderStatus == "Pending").ToList();
+        ConfirmedOrders = orders.Where(o => o.OrderStatus == "Confirmed").ToList();
+        CompletedOrders = orders.Where(o => o.OrderStatus == "Completed").ToList();
+        CancelledOrders = orders.Where(o => o.OrderStatus == "Cancelled").ToList();
 
         return Page();
     }
@@ -95,25 +59,13 @@ public class IndexModel : PageModel
             return RedirectToPage("/Account/Login");
         }
 
-        var orderRepository = new OrderRepository(_context);
-        var order = await orderRepository.GetOrderDetailAsync(id, sellerId.Value);
+        var result = await _orderService.ConfirmOrderAsync(id, sellerId.Value);
 
-        if (order == null)
+        if (!result)
         {
-            TempData["Error"] = "Không tìm thấy đơn hàng.";
+            TempData["Error"] = "Không thể xác nhận đơn hàng. Vui lòng kiểm tra lại.";
             return RedirectToPage();
         }
-
-        if (order.CompletedDate.HasValue)
-        {
-            TempData["Error"] = "Đơn hàng này đã được xử lý rồi!";
-            return RedirectToPage();
-        }
-
-        // Xác nhận đơn hàng
-        order.CompletedDate = DateTime.Now;
-        await orderRepository.UpdateOrderAsync(order);
-        await orderRepository.SaveChangesAsync();
 
         StatusMessage = $"Đơn hàng #{id} đã được xác nhận thành công!";
         return RedirectToPage();
@@ -128,24 +80,13 @@ public class IndexModel : PageModel
             return RedirectToPage("/Account/Login");
         }
 
-        var orderRepository = new OrderRepository(_context);
-        var order = await orderRepository.GetOrderDetailAsync(id, sellerId.Value);
+        var result = await _orderService.RejectOrderAsync(id, sellerId.Value, reason);
 
-        if (order == null)
+        if (!result)
         {
-            TempData["Error"] = "Không tìm thấy đơn hàng.";
+            TempData["Error"] = "Không thể từ chối đơn hàng. Vui lòng kiểm tra lại.";
             return RedirectToPage();
         }
-
-        if (order.CompletedDate.HasValue)
-        {
-            TempData["Error"] = "Đơn hàng này đã được xử lý rồi!";
-            return RedirectToPage();
-        }
-
-        // Xóa đơn hàng
-        _context.Orders.Remove(order);
-        await _context.SaveChangesAsync();
 
         StatusMessage = $"Đơn hàng #{id} đã bị từ chối. Lý do: {reason ?? "Không rõ"}";
         return RedirectToPage();

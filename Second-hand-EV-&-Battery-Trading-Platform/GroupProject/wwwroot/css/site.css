@@ -71,8 +71,69 @@ body {
   line-height: 1.6;
 }
 
+/* Header và Navbar - Z-index cao để luôn ở trên cùng */
+header {
+  position: relative !important;
+  z-index: 1030 !important;
+  overflow: visible !important;
+}
+
 .navbar {
   background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+  position: relative !important;
+  z-index: 1030 !important;
+  overflow: visible !important;
+}
+
+/* Đảm bảo dropdown menu hiển thị trên các element khác */
+.navbar-collapse {
+  overflow: visible !important;
+  position: relative !important;
+  z-index: 1030 !important;
+}
+
+.navbar .container {
+  position: relative !important;
+  z-index: 1030 !important;
+  overflow: visible !important;
+}
+
+.navbar-nav {
+  position: relative !important;
+  z-index: 1030 !important;
+  overflow: visible !important;
+}
+
+.nav-actions {
+  position: relative !important;
+  z-index: 1031 !important;
+  overflow: visible !important;
+}
+
+.nav-dropdown,
+.user-menu {
+  position: relative !important;
+  z-index: 1031 !important;
+  overflow: visible !important;
+}
+
+.nav-dropdown .dropdown,
+.user-menu .dropdown {
+  position: relative !important;
+  z-index: 1031 !important;
+  overflow: visible !important;
+}
+
+/* Dropdown menu - Z-index rất cao để luôn hiển thị trên cùng (đặc biệt cho trang quản lý đơn hàng) */
+.nav-dropdown .dropdown-menu,
+.nav-dropdown .dropdown-menu-center,
+.user-menu .dropdown-menu,
+.user-menu-dropdown,
+.dropdown-menu.show,
+.dropdown-menu[data-bs-popper],
+.show > .dropdown-menu {
+  z-index: 9999 !important; /* Z-index rất cao để luôn hiển thị trên cùng */
+  position: absolute !important;
 }
 
 .navbar .navbar-brand,
@@ -144,6 +205,7 @@ body {
   border: 1px solid rgba(47, 127, 79, 0.15);
   padding: 0.75rem;
   min-width: 220px;
+  z-index: 9999 !important; /* Z-index rất cao để luôn hiển thị trên cùng */
 }
 
 .user-menu-dropdown .dropdown-header {
@@ -184,6 +246,7 @@ body {
   padding: 0.5rem 0;
   border: 1px solid rgba(47, 127, 79, 0.15);
   box-shadow: 0 12px 24px rgba(33, 64, 43, 0.18);
+  z-index: 9999 !important; /* Z-index rất cao để luôn hiển thị trên cùng */
 }
 
 .nav-dropdown .dropdown-item {
@@ -838,8 +901,31 @@ body {
   color: var(--primary-dark);
 }
 
+/* Đảm bảo main và container không che dropdown */
 main {
   padding-bottom: 2rem;
+  position: relative;
+  z-index: 1 !important; /* Z-index thấp hơn header/navbar để không che dropdown */
+  overflow: visible !important; /* Cho phép dropdown hiển thị ra ngoài main */
+}
+
+/* Đảm bảo container trong main không che dropdown */
+main .container,
+main .container-fluid,
+body > header + div.container,
+body > header + div.container-fluid,
+.container:not(.navbar .container):not(.navbar-collapse .container),
+.container-fluid:not(.navbar .container-fluid) {
+  position: relative !important;
+  z-index: 1 !important; /* Z-index thấp hơn header/navbar để không che dropdown */
+  overflow: visible !important; /* Cho phép dropdown hiển thị ra ngoài container */
+}
+
+/* Đảm bảo div bọc main trong layout không che dropdown */
+body > header + div {
+  position: relative !important;
+  z-index: 1 !important;
+  overflow: visible !important;
 }
 
 .page-header {

@@ -42,6 +42,12 @@ public class OrderRepository : IOrderRepository
         return Task.CompletedTask;
     }
 
+    public Task DeleteOrderAsync(Order order, CancellationToken cancellationToken = default)
+    {
+        _context.Orders.Remove(order);
+        return Task.CompletedTask;
+    }
+
     public Task SaveChangesAsync(CancellationToken cancellationToken = default)
     {
         return _context.SaveChangesAsync(cancellationToken);

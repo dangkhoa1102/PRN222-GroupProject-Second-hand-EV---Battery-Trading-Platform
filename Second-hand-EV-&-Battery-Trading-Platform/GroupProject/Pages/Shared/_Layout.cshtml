@@ -46,6 +46,9 @@
                                         <li><a class="dropdown-item" asp-page="/BatteryListings/Index">Tin pin của tôi</a></li>
                                     </ul>
                                 </div>
+                                <a class="btn btn-outline-light" asp-page="/Buyer/Orders/Index">
+                                    <i class="bi bi-cart"></i> Đơn hàng của tôi
+                                </a>
                                 <a class="btn btn-outline-light" asp-page="/Seller/Orders/Index">
                                     Quản lý đơn hàng
                                 </a>
@@ -97,6 +100,15 @@
                                         <div class="small text-muted">@Context.Session.GetString("Email")</div>
                                     </li>
                                     <li><hr class="dropdown-divider" /></li>
+                                    @if (string.Equals(Context.Session.GetString("Role"), RoleConstants.Customer, StringComparison.OrdinalIgnoreCase))
+                                    {
+                                        <li>
+                                            <a class="dropdown-item" asp-page="/Buyer/Orders/Index">
+                                                <i class="bi bi-cart"></i> Đơn hàng của tôi
+                                            </a>
+                                        </li>
+                                        <li><hr class="dropdown-divider" /></li>
+                                    }
                                     <li>
                                         <form asp-page="/Account/Logout" method="post" class="d-inline">
                                             <button type="submit" class="dropdown-item text-danger fw-semibold">

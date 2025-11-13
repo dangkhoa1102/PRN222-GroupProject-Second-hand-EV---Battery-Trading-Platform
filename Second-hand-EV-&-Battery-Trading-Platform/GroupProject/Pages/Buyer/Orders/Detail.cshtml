@@ -1,0 +1,158 @@
+@page "{id:int}"
+@model GroupProject.Pages.Buyer.Orders.DetailModel
+@{
+    ViewData["Title"] = "Chi tiết đơn hàng";
+}
+
+<div class="page-header">
+    <h1>Chi tiết đơn hàng #@Model.OrderDetail?.OrderId</h1>
+    <a class="btn btn-link" asp-page="Index">Quay lại danh sách</a>
+</div>
+
+@if (!string.IsNullOrEmpty(Model.StatusMessage))
+{
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        @Model.StatusMessage
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
+@if (!string.IsNullOrEmpty(Model.ErrorMessage))
+{
+    <div class="alert alert-danger">@Model.ErrorMessage</div>
+}
+
+@if (Model.OrderDetail != null)
+{
+    <div class="row">
+        <div class="col-lg-8">
+            <!-- Thông tin đơn hàng -->
+            <div class="card-modern mb-4">
+                <h3 class="h5 mb-3">Thông tin đơn hàng</h3>
+                <dl class="row">
+                    <dt class="col-sm-4">Mã đơn hàng</dt>
+                    <dd class="col-sm-8">#@Model.OrderDetail.OrderId</dd>
+
+                    <dt class="col-sm-4">Trạng thái</dt>
+                    <dd class="col-sm-8">
+                        <span class="badge bg-@(Model.OrderDetail.OrderStatus switch
+                        {
+                            "Pending" => "warning",
+                            "Confirmed" => "info",
+                            "Delivered" => "primary",
+                            "Completed" => "success",
+                            "Cancelled" => "danger",
+                            _ => "secondary"
+                        })">
+                            @Model.OrderDetail.Status
+                        </span>
+                    </dd>
+
+                    <dt class="col-sm-4">Ngày đặt</dt>
+                    <dd class="col-sm-8">@(Model.OrderDetail.CreatedDate?.ToString("dd/MM/yyyy HH:mm") ?? "—")</dd>
+
+                    @if (Model.OrderDetail.CompletedDate.HasValue)
+                    {
+                        <dt class="col-sm-4">Ngày xác nhận</dt>
+                        <dd class="col-sm-8">@Model.OrderDetail.CompletedDate.Value.ToString("dd/MM/yyyy HH:mm")</dd>
+                    }
+
+                    @if (Model.OrderDetail.DeliveryDate.HasValue)
+                    {
+                        <dt class="col-sm-4">Ngày nhận hàng</dt>
+                        <dd class="col-sm-8">@Model.OrderDetail.DeliveryDate.Value.ToString("dd/MM/yyyy HH:mm")</dd>
+                    }
+
+                    @if (!string.IsNullOrEmpty(Model.OrderDetail.CancellationReason))
+                    {
+                        <dt class="col-sm-4">Lý do hủy</dt>
+                        <dd class="col-sm-8">@Model.OrderDetail.CancellationReason</dd>
+                    }
+                </dl>
+            </div>
+
+            <!-- Thông tin sản phẩm -->
+            <div class="card-modern mb-4">
+                <h3 class="h5 mb-3">Thông tin sản phẩm</h3>
+                <div class="row">
+                    @if (!string.IsNullOrEmpty(Model.OrderDetail.ItemImageUrl))
+                    {
+                        <div class="col-md-4 mb-3">
+                            <img src="@Model.OrderDetail.ItemImageUrl" alt="@Model.OrderDetail.ItemName" class="img-fluid rounded" />
+                        </div>
+                    }
+                    <div class="@(string.IsNullOrEmpty(Model.OrderDetail.ItemImageUrl) ? "col-12" : "col-md-8")">
+                        <h4>@Model.OrderDetail.ItemName</h4>
+                        <p class="text-muted">@(Model.OrderDetail.OrderType == "Vehicle" ? "Xe điện" : "Pin điện")</p>
+                        @if (!string.IsNullOrEmpty(Model.OrderDetail.ItemDescription))
+                        {
+                            <p>@Model.OrderDetail.ItemDescription</p>
+                        }
+                    </div>
+                </div>
+            </div>
+
+            <!-- Thông tin người bán -->
+            <div class="card-modern mb-4">
+                <h3 class="h5 mb-3">Thông tin người bán</h3>
+                <dl class="row mb-0">
+                    <dt class="col-sm-4">Tên</dt>
+                    <dd class="col-sm-8">@Model.OrderDetail.SellerName</dd>
+
+                    <dt class="col-sm-4">Email</dt>
+                    <dd class="col-sm-8">@Model.OrderDetail.SellerEmail</dd>
+
+                    <dt class="col-sm-4">Số điện thoại</dt>
+                    <dd class="col-sm-8">@Model.OrderDetail.SellerPhone</dd>
+                </dl>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <!-- Tóm tắt đơn hàng -->
+            <div class="card-modern mb-4">
+                <h3 class="h5 mb-3">Tóm tắt đơn hàng</h3>
+                <dl class="row mb-0">
+                    <dt class="col-6">Tổng tiền</dt>
+                    <dd class="col-6 text-end"><strong class="text-success">@Model.OrderDetail.TotalAmount.ToString("N0") đ</strong></dd>
+
+                    <dt class="col-6">Thanh toán</dt>
+                    <dd class="col-6 text-end">@Model.OrderDetail.PaymentMethod</dd>
+                </dl>
+            </div>
+
+            <!-- Thao tác -->
+            @if (Model.OrderDetail.CanConfirmDelivery)
+            {
+                <div class="card-modern mb-4">
+                    <h3 class="h5 mb-3">Thao tác</h3>
+                    <form method="post" asp-page-handler="ConfirmDelivery" class="mb-2">
+                        <input type="hidden" name="id" value="@Model.OrderDetail.OrderId" />
+                        <button type="submit" class="btn btn-success w-100">
+                            <i class="bi bi-check-circle"></i> Xác nhận nhận hàng
+                        </button>
+                    </form>
+                    <p class="text-muted small mb-0">Xác nhận khi bạn đã nhận được hàng từ người bán.</p>
+                </div>
+            }
+
+            @if (Model.OrderDetail.CanCancel)
+            {
+                <div class="card-modern mb-4">
+                    <h3 class="h5 mb-3">Hủy đơn hàng</h3>
+                    <form method="post" asp-page-handler="CancelOrder" onsubmit="return confirm('Bạn có chắc chắn muốn hủy đơn hàng này?');">
+                        <input type="hidden" name="id" value="@Model.OrderDetail.OrderId" />
+                        <div class="mb-2">
+                            <label for="reason" class="form-label">Lý do hủy (tùy chọn)</label>
+                            <textarea id="reason" name="reason" class="form-control" rows="3" placeholder="Nhập lý do hủy đơn hàng..."></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-danger w-100">
+                            <i class="bi bi-x-circle"></i> Hủy đơn hàng
+                        </button>
+                    </form>
+                </div>
+            }
+        </div>
+    </div>
+}
+

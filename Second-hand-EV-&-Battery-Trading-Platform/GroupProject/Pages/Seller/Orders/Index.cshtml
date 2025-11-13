@@ -19,12 +19,22 @@
     <ul class="nav nav-tabs mb-4" id="orderTabs" role="tablist">
         <li class="nav-item" role="presentation">
             <button class="nav-link active" id="pending-tab" data-bs-toggle="tab" data-bs-target="#pending" type="button" role="tab">
-                Đơn hàng chờ xử lý <span class="badge bg-warning text-dark ms-1">@Model.PendingOrders.Count</span>
+                Chờ xác nhận <span class="badge bg-warning text-dark ms-1">@Model.PendingOrders.Count</span>
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="confirmed-tab" data-bs-toggle="tab" data-bs-target="#confirmed" type="button" role="tab">
+                Đã xác nhận <span class="badge bg-info ms-1">@Model.ConfirmedOrders.Count</span>
             </button>
         </li>
         <li class="nav-item" role="presentation">
             <button class="nav-link" id="completed-tab" data-bs-toggle="tab" data-bs-target="#completed" type="button" role="tab">
-                Đơn hàng đã hoàn thành <span class="badge bg-success ms-1">@Model.CompletedOrders.Count</span>
+                Đã hoàn thành <span class="badge bg-success ms-1">@Model.CompletedOrders.Count</span>
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="cancelled-tab" data-bs-toggle="tab" data-bs-target="#cancelled" type="button" role="tab">
+                Đã hủy <span class="badge bg-danger ms-1">@Model.CancelledOrders.Count</span>
             </button>
         </li>
     </ul>
@@ -72,22 +82,33 @@
                                     <td>@order.PaymentMethod</td>
                                     <td>@order.CreatedDate?.ToString("dd/MM/yyyy HH:mm")</td>
                                     <td>
-                                        <span class="badge bg-warning text-dark">Chờ xử lý</span>
+                                        <span class="badge bg-@(order.OrderStatus switch
+                                        {
+                                            "Pending" => "warning text-dark",
+                                            "Confirmed" => "info",
+                                            "Delivered" => "primary",
+                                            "Completed" => "success",
+                                            "Cancelled" => "danger",
+                                            _ => "secondary"
+                                        })">@order.Status</span>
                                     </td>
                                     <td>
                                         <div class="btn-group" role="group">
                                             <a asp-page="/Seller/Orders/Detail" asp-route-id="@order.OrderId" class="btn btn-sm btn-outline-primary" title="Xem chi tiết">
                                                 <i class="bi bi-eye"></i>
                                             </a>
-                                            <form method="post" asp-page-handler="Confirm" asp-route-id="@order.OrderId" class="d-inline" onsubmit="return confirm('Xác nhận đơn hàng #@order.OrderId?')">
-                                                <button type="submit" class="btn btn-sm btn-success" title="Xác nhận">
-                                                    <i class="bi bi-check-circle"></i>
+                                            @if (order.OrderStatus == "Pending")
+                                            {
+                                                <form method="post" asp-page-handler="Confirm" asp-route-id="@order.OrderId" class="d-inline" onsubmit="return confirm('Xác nhận đơn hàng #@order.OrderId?')">
+                                                    <button type="submit" class="btn btn-sm btn-success" title="Xác nhận">
+                                                        <i class="bi bi-check-circle"></i>
+                                                    </button>
+                                                </form>
+                                                <button type="button" class="btn btn-sm btn-danger" title="Từ chối"
+                                                        data-bs-toggle="modal" data-bs-target="#rejectModal@(order.OrderId)">
+                                                    <i class="bi bi-x-circle"></i>
                                                 </button>
-                                            </form>
-                                            <button type="button" class="btn btn-sm btn-danger" title="Từ chối"
-                                                    data-bs-toggle="modal" data-bs-target="#rejectModal@(order.OrderId)">
-                                                <i class="bi bi-x-circle"></i>
-                                            </button>
+                                            }
                                         </div>
                                     </td>
                                 </tr>
@@ -111,7 +132,7 @@
                                     </div>
                                     <div class="modal-body">
                                         <div class="alert alert-warning">
-                                            <strong>Cảnh báo:</strong> Đơn hàng sẽ bị xóa khỏi hệ thống sau khi từ chối!
+                                            <strong>Cảnh báo:</strong> Đơn hàng sẽ bị hủy sau khi từ chối!
                                         </div>
                                         <p><strong>Người mua:</strong> @order.BuyerName</p>
                                         <p><strong>Sản phẩm:</strong> @order.ItemName</p>
@@ -143,6 +164,70 @@
             }
         </div>
 
+        <!-- Đơn hàng đã xác nhận -->
+        <div class="tab-pane fade" id="confirmed" role="tabpanel">
+            @if (Model.ConfirmedOrders.Any())
+            {
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Mã đơn</th>
+                                <th>Loại</th>
+                                <th>Người mua</th>
+                                <th>Số tiền</th>
+                                <th>Thanh toán</th>
+                                <th>Ngày đặt</th>
+                                <th>Ngày xác nhận</th>
+                                <th>Trạng thái</th>
+                                <th>Thao tác</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var order in Model.ConfirmedOrders)
+                            {
+                                <tr>
+                                    <td><strong>#@order.OrderId</strong></td>
+                                    <td>
+                                        @if (order.OrderType == "Vehicle")
+                                        {
+                                            <span class="badge bg-primary text-white">Xe điện</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-info text-white">Pin</span>
+                                        }
+                                    </td>
+                                    <td>
+                                        <div>@order.BuyerName</div>
+                                        <small class="text-muted">@order.BuyerEmail</small>
+                                    </td>
+                                    <td><strong>@order.TotalAmount.ToString("N0") đ</strong></td>
+                                    <td>@order.PaymentMethod</td>
+                                    <td>@order.CreatedDate?.ToString("dd/MM/yyyy HH:mm")</td>
+                                    <td>@order.CompletedDate?.ToString("dd/MM/yyyy HH:mm")</td>
+                                    <td>
+                                        <span class="badge bg-info">@order.Status</span>
+                                    </td>
+                                    <td>
+                                        <a asp-page="/Seller/Orders/Detail" asp-route-id="@order.OrderId" class="btn btn-sm btn-outline-primary">
+                                            <i class="bi bi-eye"></i> Xem
+                                        </a>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+            else
+            {
+                <div class="alert alert-info">
+                    <i class="bi bi-info-circle"></i> Chưa có đơn hàng nào đã được xác nhận.
+                </div>
+            }
+        </div>
+
         <!-- Đơn hàng đã hoàn thành -->
         <div class="tab-pane fade" id="completed" role="tabpanel">
             @if (Model.CompletedOrders.Any())
@@ -156,7 +241,9 @@
                                 <th>Người mua</th>
                                 <th>Số tiền</th>
                                 <th>Thanh toán</th>
-                                <th>Ngày hoàn thành</th>
+                                <th>Ngày đặt</th>
+                                <th>Ngày nhận hàng</th>
+                                <th>Trạng thái</th>
                                 <th>Thao tác</th>
                             </tr>
                         </thead>
@@ -181,7 +268,11 @@
                                     </td>
                                     <td><strong>@order.TotalAmount.ToString("N0") đ</strong></td>
                                     <td>@order.PaymentMethod</td>
-                                    <td>@order.CompletedDate?.ToString("dd/MM/yyyy HH:mm")</td>
+                                    <td>@order.CreatedDate?.ToString("dd/MM/yyyy HH:mm")</td>
+                                    <td>@order.DeliveryDate?.ToString("dd/MM/yyyy HH:mm")</td>
+                                    <td>
+                                        <span class="badge bg-success">@order.Status</span>
+                                    </td>
                                     <td>
                                         <a asp-page="/Seller/Orders/Detail" asp-route-id="@order.OrderId" class="btn btn-sm btn-outline-primary">
                                             <i class="bi bi-eye"></i> Xem
@@ -197,6 +288,68 @@
             {
                 <div class="alert alert-info">
                     <i class="bi bi-info-circle"></i> Chưa có đơn hàng nào được hoàn thành.
+                </div>
+            }
+        </div>
+
+        <!-- Đơn hàng đã hủy -->
+        <div class="tab-pane fade" id="cancelled" role="tabpanel">
+            @if (Model.CancelledOrders.Any())
+            {
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Mã đơn</th>
+                                <th>Loại</th>
+                                <th>Người mua</th>
+                                <th>Số tiền</th>
+                                <th>Thanh toán</th>
+                                <th>Ngày đặt</th>
+                                <th>Trạng thái</th>
+                                <th>Thao tác</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var order in Model.CancelledOrders)
+                            {
+                                <tr>
+                                    <td><strong>#@order.OrderId</strong></td>
+                                    <td>
+                                        @if (order.OrderType == "Vehicle")
+                                        {
+                                            <span class="badge bg-primary text-white">Xe điện</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-info text-white">Pin</span>
+                                        }
+                                    </td>
+                                    <td>
+                                        <div>@order.BuyerName</div>
+                                        <small class="text-muted">@order.BuyerEmail</small>
+                                    </td>
+                                    <td><strong>@order.TotalAmount.ToString("N0") đ</strong></td>
+                                    <td>@order.PaymentMethod</td>
+                                    <td>@order.CreatedDate?.ToString("dd/MM/yyyy HH:mm")</td>
+                                    <td>
+                                        <span class="badge bg-danger">@order.Status</span>
+                                    </td>
+                                    <td>
+                                        <a asp-page="/Seller/Orders/Detail" asp-route-id="@order.OrderId" class="btn btn-sm btn-outline-primary">
+                                            <i class="bi bi-eye"></i> Xem
+                                        </a>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+            else
+            {
+                <div class="alert alert-info">
+                    <i class="bi bi-info-circle"></i> Chưa có đơn hàng nào bị hủy.
                 </div>
             }
         </div>

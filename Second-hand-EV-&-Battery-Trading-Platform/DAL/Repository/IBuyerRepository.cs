@@ -13,7 +13,11 @@ namespace DAL.Repository
         Task<IEnumerable<Vehicle>> SearchVehicle(string keyword);
         Task<IEnumerable<Battery>> SearchBattery(string keyword);
         Task<IEnumerable<Review>> GetReview(int reviewedUser);
-        Task<bool> CreateOrder(Order order);
+        Task<bool> CreateOrder(Order order, string itemType, int itemId);
         Task<bool> CreateReview(Review review);
+        Task<List<Order>> GetBuyerOrdersAsync(int buyerId);
+        Task<Order?> GetBuyerOrderDetailAsync(int orderId, int buyerId);
+        Task<bool> UpdateOrderAsync(Order order);
+        Task SaveChangesAsync();
     }
 }

@@ -24,16 +24,23 @@ public class IndexModel : PageModel
 
     public List<VehicleListingDto> ApprovedVehicles { get; private set; } = new();
     public List<BatteryListingDto> ApprovedBatteries { get; private set; } = new();
+    public int TotalVehicleCount { get; private set; }
+    public int TotalBatteryCount { get; private set; }
+    public string HomePageUrl { get; private set; } = "/";
 
     public async Task<IActionResult> OnGetAsync()
     {
-        if (!HttpContext.Session.GetInt32("UserId").HasValue)
-        {
-            return RedirectToPage("/Account/Login");
-        }
+        // Trang công khai - không yêu cầu login
+        // Lấy tất cả tin đã duyệt
+        var allVehicles = await _vehicleListingService.GetApprovedListingsAsync();
+        TotalVehicleCount = allVehicles.Count;
+        // Chỉ hiển thị 8 tin mới nhất trên homepage
+        ApprovedVehicles = allVehicles.Take(8).ToList();
 
-        ApprovedVehicles = await _vehicleListingService.GetApprovedListingsAsync();
-        ApprovedBatteries = await _batteryListingService.GetApprovedListingsAsync();
+        var allBatteries = await _batteryListingService.GetApprovedListingsAsync();
+        TotalBatteryCount = allBatteries.Count;
+        // Chỉ hiển thị 8 tin mới nhất trên homepage
+        ApprovedBatteries = allBatteries.Take(8).ToList();
 
         return Page();
     }

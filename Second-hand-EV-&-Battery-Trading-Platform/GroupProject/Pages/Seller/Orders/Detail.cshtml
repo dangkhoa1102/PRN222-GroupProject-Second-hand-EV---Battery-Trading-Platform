@@ -70,8 +70,20 @@
 
                                     @if (Model.OrderDetail.CompletedDate.HasValue)
                                     {
-                                        <dt class="col-sm-4">Ngày hoàn thành:</dt>
-                                        <dd class="col-sm-8">@Model.OrderDetail.CompletedDate?.ToString("dd/MM/yyyy HH:mm")</dd>
+                                        <dt class="col-sm-4">Ngày xác nhận:</dt>
+                                        <dd class="col-sm-8">@Model.OrderDetail.CompletedDate.Value.ToString("dd/MM/yyyy HH:mm")</dd>
+                                    }
+
+                                    @if (Model.OrderDetail.DeliveryDate.HasValue)
+                                    {
+                                        <dt class="col-sm-4">Ngày nhận hàng:</dt>
+                                        <dd class="col-sm-8">@Model.OrderDetail.DeliveryDate.Value.ToString("dd/MM/yyyy HH:mm")</dd>
+                                    }
+
+                                    @if (!string.IsNullOrEmpty(Model.OrderDetail.CancellationReason))
+                                    {
+                                        <dt class="col-sm-4">Lý do hủy:</dt>
+                                        <dd class="col-sm-8"><span class="text-danger">@Model.OrderDetail.CancellationReason</span></dd>
                                     }
                                 </dl>
                             </div>
@@ -106,8 +118,20 @@
 
                                     @if (Model.OrderDetail.CompletedDate.HasValue)
                                     {
-                                        <dt class="col-sm-3">Ngày hoàn thành:</dt>
-                                        <dd class="col-sm-9">@Model.OrderDetail.CompletedDate?.ToString("dd/MM/yyyy HH:mm")</dd>
+                                        <dt class="col-sm-3">Ngày xác nhận:</dt>
+                                        <dd class="col-sm-9">@Model.OrderDetail.CompletedDate.Value.ToString("dd/MM/yyyy HH:mm")</dd>
+                                    }
+
+                                    @if (Model.OrderDetail.DeliveryDate.HasValue)
+                                    {
+                                        <dt class="col-sm-3">Ngày nhận hàng:</dt>
+                                        <dd class="col-sm-9">@Model.OrderDetail.DeliveryDate.Value.ToString("dd/MM/yyyy HH:mm")</dd>
+                                    }
+
+                                    @if (!string.IsNullOrEmpty(Model.OrderDetail.CancellationReason))
+                                    {
+                                        <dt class="col-sm-3">Lý do hủy:</dt>
+                                        <dd class="col-sm-9"><span class="text-danger">@Model.OrderDetail.CancellationReason</span></dd>
                                     }
                                 </dl>
                             </div>
@@ -149,33 +173,94 @@
                     <h5 class="mb-0"><i class="bi bi-info-circle"></i> Trạng thái</h5>
                 </div>
                 <div class="card-body text-center">
-                    @if (Model.OrderDetail.CompletedDate.HasValue)
+                    <span class="badge bg-@(Model.OrderDetail.OrderStatus switch
                     {
-                        <span class="badge bg-success text-white fs-6 p-3">
-                            <i class="bi bi-check-circle"></i> Đã hoàn thành
-                        </span>
-                    }
-                    else
+                        "Pending" => "warning text-dark",
+                        "Confirmed" => "info",
+                        "Delivered" => "primary",
+                        "Completed" => "success",
+                        "Cancelled" => "danger",
+                        _ => "secondary"
+                    }) fs-6 p-3">
+                        <i class="bi bi-@(Model.OrderDetail.OrderStatus switch
+                        {
+                            "Pending" => "clock",
+                            "Confirmed" => "check-circle",
+                            "Delivered" => "truck",
+                            "Completed" => "check-circle-fill",
+                            "Cancelled" => "x-circle",
+                            _ => "info-circle"
+                        })"></i> @Model.OrderDetail.Status
+                    </span>
+                    @if (!string.IsNullOrEmpty(Model.OrderDetail.CancellationReason))
                     {
-                        <span class="badge bg-warning text-dark fs-6 p-3">
-                            <i class="bi bi-clock"></i> Chờ xử lý
-                        </span>
+                        <div class="mt-3">
+                            <small class="text-muted"><strong>Lý do hủy:</strong></small>
+                            <p class="text-danger small mb-0">@Model.OrderDetail.CancellationReason</p>
+                        </div>
                     }
                 </div>
             </div>
+
+            <!-- Thao tác -->
+            @if (Model.OrderDetail.CanConfirmOrReject)
+            {
+                <div class="card mb-3">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="bi bi-gear"></i> Thao tác</h5>
+                    </div>
+                    <div class="card-body">
+                        <form method="post" asp-page-handler="Confirm" asp-route-id="@Model.OrderDetail.OrderId" class="mb-2">
+                            <button type="submit" class="btn btn-success w-100" onclick="return confirm('Xác nhận đơn hàng #@Model.OrderDetail.OrderId?')">
+                                <i class="bi bi-check-circle"></i> Xác nhận đơn hàng
+                            </button>
+                        </form>
+                        <button type="button" class="btn btn-danger w-100" data-bs-toggle="modal" data-bs-target="#rejectModal">
+                            <i class="bi bi-x-circle"></i> Từ chối đơn hàng
+                        </button>
+                    </div>
+                </div>
+            }
         </div>
     </div>
 
-    <!-- Thông báo trạng thái -->
-    @if (!Model.OrderDetail.CanConfirmOrReject)
+    <!-- Modal Reject -->
+    @if (Model.OrderDetail.CanConfirmOrReject)
     {
-        <div class="alert alert-success">
-            <i class="bi bi-check-circle"></i> Đơn hàng này đã được xử lý và hoàn thành.
+        <div class="modal fade" id="rejectModal" tabindex="-1" aria-labelledby="rejectModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <form method="post" asp-page-handler="Reject" asp-route-id="@Model.OrderDetail.OrderId">
+                        <div class="modal-header bg-danger text-white">
+                            <h5 class="modal-title" id="rejectModalLabel">
+                                <i class="bi bi-exclamation-triangle"></i> Từ chối đơn hàng #@Model.OrderDetail.OrderId
+                            </h5>
+                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="alert alert-warning">
+                                <strong>Cảnh báo:</strong> Đơn hàng sẽ bị hủy sau khi từ chối!
+                            </div>
+                            <p><strong>Người mua:</strong> @Model.OrderDetail.BuyerName</p>
+                            <p><strong>Sản phẩm:</strong> @Model.OrderDetail.ItemName</p>
+                            <p><strong>Số tiền:</strong> @Model.OrderDetail.TotalAmount.ToString("N0") đ</p>
+                            <hr />
+                            <div class="mb-3">
+                                <label for="reason" class="form-label">Lý do từ chối: <span class="text-danger">*</span></label>
+                                <textarea class="form-control" id="reason" name="reason" rows="3"
+                                          placeholder="Vui lòng nhập lý do từ chối đơn hàng..." required></textarea>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                            <button type="submit" class="btn btn-danger">
+                                <i class="bi bi-x-circle"></i> Xác nhận từ chối
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
         </div>
     }
-
-    <div class="alert alert-info">
-        <i class="bi bi-info-circle"></i> <strong>Lưu ý:</strong> Để xác nhận hoặc từ chối đơn hàng, vui lòng quay lại trang danh sách đơn hàng.
-    </div>
 </div>
 

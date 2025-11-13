@@ -11,12 +11,6 @@ namespace BLL.Services
 {
     public class BuyerService : IBuyerService
     {
-        private readonly IBuyerRepository _repo;
-        public BuyerService(IBuyerRepository repo)
-        {
-            _repo = repo;
-        }
-
         public async Task<bool> CreateOrder(CreateOrderDto order)
         {
             try
@@ -25,15 +19,23 @@ namespace BLL.Services
                 {
                     throw new Exception("Order is null");
                 }
+                if(string.IsNullOrEmpty(order.ItemType) || order.ItemId <= 0)
+                {
+                    throw new Exception("Item type and Item ID are required");
+                }
+                
                 var orderEntity = new Order
                 {
                     BuyerId = order.BuyerId,
                     SellerId = order.SellerId,
                     TotalAmount = order.TotalAmount,
-                    PaymentMethod = order.PaymentMethod,
+                    PaymentMethod = order.PaymentMethod ?? "Cash",
                     CreatedDate = DateTime.Now,
+                    OrderStatus = "Pending"
                 };
-                var result = await _repo.CreateOrder(orderEntity);
+                
+                var repo = new BuyerRepository();
+                var result = await repo.CreateOrder(orderEntity, order.ItemType, order.ItemId);
                 if(!result)
                 {
                     throw new Exception("Failed to create order");
@@ -60,12 +62,14 @@ namespace BLL.Services
                 var reviewEntity = new Review
                 {
                     OrderId = review.OrderId,
+                    ReviewerId = review.ReviewerId,
                     ReviewedUserId = review.ReviewedUserId,
                     Rating = review.Rating,
                     Comment = review.Comment,
                     CreatedDate = DateTime.Now,
                 };
-                var result = await _repo.CreateReview(reviewEntity);
+                var repo = new BuyerRepository();
+                var result = await repo.CreateReview(reviewEntity);
                 if(!result)
                 {
                     throw new Exception("Failed to create review");
@@ -85,16 +89,14 @@ namespace BLL.Services
         {
             try
             {
-                var result = await _repo.GetReview(reviewedUser);
-                if (result == null)
-                {
-                    throw new Exception("No reviews found");
-                }
-                return result;
+                var repo = new BuyerRepository();
+                var result = await repo.GetReview(reviewedUser);
+                return result ?? new List<Review>();
             }
-            catch (Exception ex)
+            catch
             {
-                throw new Exception(ex.Message);
+                // Trả về empty list nếu có lỗi thay vì throw exception
+                return new List<Review>();
             }
         }
 
@@ -102,7 +104,8 @@ namespace BLL.Services
         {
             try
             {
-                var result = await _repo.SearchBattery(keyword);
+                var repo = new BuyerRepository();
+                var result = await repo.SearchBattery(keyword);
                 if(result == null)
                 {
                     throw new Exception("No batteries found");
@@ -119,7 +122,8 @@ namespace BLL.Services
         {
             try
             {
-                var result = await _repo.SearchVehicle(keyword);
+                var repo = new BuyerRepository();
+                var result = await repo.SearchVehicle(keyword);
                 if (result == null)
                 {
                     throw new Exception("No vehicles found");
