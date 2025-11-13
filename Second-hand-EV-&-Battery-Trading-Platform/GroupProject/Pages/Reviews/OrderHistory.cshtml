@@ -1,0 +1,82 @@
+@page
+@model GroupProject.Pages.Reviews.OrderHistoryModel
+@{
+    ViewData["Title"] = "Lịch sử đơn hàng";
+}
+
+<div class="page-header">
+    <h1>Lịch sử đơn hàng</h1>
+</div>
+
+@if (!string.IsNullOrEmpty(Model.ErrorMessage))
+{
+    <div class="alert alert-danger">@Model.ErrorMessage</div>
+}
+
+@if (Model.Orders.Any())
+{
+    <div class="row g-4">
+        @foreach (var order in Model.Orders)
+        {
+            <div class="col-12">
+                <div class="card-modern">
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <div>
+                            <h5 class="mb-1">Đơn hàng #@order.OrderId</h5>
+                            <p class="text-muted mb-0">
+                                <small>Ngày hoàn thành: @(order.CompletedDate?.ToString("dd/MM/yyyy HH:mm") ?? "—")</small>
+                            </p>
+                        </div>
+                        <div class="text-end">
+                            <span class="badge bg-success fs-6 px-3 py-2">@order.TotalAmount.ToString("N0") đ</span>
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <strong>Sản phẩm:</strong> 
+                            <span class="badge bg-info">@order.ProductType</span>
+                            <span>@order.ProductName</span>
+                        </div>
+                        <div class="col-md-6">
+                            <strong>Người bán:</strong> @order.SellerName
+                        </div>
+                        <div class="col-md-6 mt-2">
+                            <strong>Phương thức thanh toán:</strong> @(order.PaymentMethod ?? "—")
+                        </div>
+                        <div class="col-md-6 mt-2">
+                            <strong>Ngày tạo:</strong> @(order.CreatedDate?.ToString("dd/MM/yyyy HH:mm") ?? "—")
+                        </div>
+                    </div>
+
+                    <div class="d-flex gap-2">
+                        @if (order.HasReview)
+                        {
+                            <a asp-page="Details" asp-route-id="@order.ReviewId" class="btn btn-outline-primary">
+                                Xem đánh giá
+                            </a>
+                        }
+                        else
+                        {
+                            <a asp-page="Create" asp-route-orderId="@order.OrderId" class="btn btn-primary">
+                                Đánh giá người bán
+                            </a>
+                        }
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+}
+else
+{
+    <div class="alert alert-info">
+        <h5 class="alert-heading">Chưa có đơn hàng đã hoàn thành</h5>
+        <p class="mb-2">Bạn chưa có đơn hàng nào đã hoàn thành để có thể đánh giá.</p>
+        <p class="mb-0 small">
+            <strong>Lưu ý:</strong> Chỉ những đơn hàng đã hoàn thành (có ngày hoàn thành) mới có thể đánh giá người bán.
+            Sau khi mua hàng và nhận được sản phẩm, đơn hàng sẽ được đánh dấu hoàn thành và bạn có thể đánh giá tại đây.
+        </p>
+    </div>
+}
+

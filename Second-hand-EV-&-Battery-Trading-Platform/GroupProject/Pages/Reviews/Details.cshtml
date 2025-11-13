@@ -1,0 +1,67 @@
+@page "{id:int}"
+@model GroupProject.Pages.Reviews.DetailsModel
+@{
+    ViewData["Title"] = "Chi tiết đánh giá";
+}
+
+<div class="page-header">
+    <h1>Chi tiết đánh giá</h1>
+    <a class="btn btn-link" asp-page="OrderHistory">Quay lại lịch sử đơn hàng</a>
+</div>
+
+@if (!string.IsNullOrEmpty(Model.ErrorMessage))
+{
+    <div class="alert alert-danger">@Model.ErrorMessage</div>
+}
+
+@if (Model.Review != null)
+{
+    <div class="card-modern">
+        <div class="d-flex justify-content-between align-items-start mb-4">
+            <div>
+                <h5 class="mb-2">@Model.Review.ReviewerName</h5>
+                <div class="rating-stars mb-2">
+                    @for (int i = 1; i <= 5; i++)
+                    {
+                        <span class="fs-4 @(i <= Model.Review.Rating ? "text-warning" : "text-muted")">★</span>
+                    }
+                    <span class="ms-2">@Model.Review.Rating / 5 sao</span>
+                </div>
+            </div>
+            <small class="text-muted">@Model.Review.CreatedDate?.ToString("dd/MM/yyyy HH:mm")</small>
+        </div>
+
+        @if (!string.IsNullOrWhiteSpace(Model.Review.Comment))
+        {
+            <div class="mb-4">
+                <h6>Nhận xét:</h6>
+                <p class="mb-0">@Model.Review.Comment</p>
+            </div>
+        }
+
+        <hr />
+
+        <div class="row">
+            <div class="col-md-6">
+                <h6>Thông tin đơn hàng</h6>
+                <p class="mb-1"><strong>Mã đơn hàng:</strong> #@Model.Review.OrderId</p>
+                @if (!string.IsNullOrWhiteSpace(Model.Review.ProductName))
+                {
+                    <p class="mb-1">
+                        <strong>Sản phẩm:</strong> 
+                        <span class="badge bg-info">@Model.Review.ProductType</span> 
+                        @Model.Review.ProductName
+                    </p>
+                }
+            </div>
+            <div class="col-md-6">
+                <h6>Người được đánh giá</h6>
+                <p class="mb-1"><strong>Tên:</strong> @Model.Review.ReviewedUserName</p>
+                <a asp-page="UserReviews" asp-route-userId="@Model.Review.ReviewedUserId" class="btn btn-sm btn-outline-primary">
+                    Xem tất cả đánh giá
+                </a>
+            </div>
+        </div>
+    </div>
+}
+

@@ -10,15 +10,18 @@ namespace GroupProject.Pages.VehicleListings;
 public class DetailsModel : PageModel
 {
     private readonly IVehicleListingService _vehicleListingService;
+    private readonly IReviewService _reviewService;
 
-    public DetailsModel(IVehicleListingService vehicleListingService)
+    public DetailsModel(IVehicleListingService vehicleListingService, IReviewService reviewService)
     {
         _vehicleListingService = vehicleListingService;
+        _reviewService = reviewService;
     }
 
     public VehicleListingDetailDto? Listing { get; private set; }
     public string? ErrorMessage { get; private set; }
     public bool IsOwner { get; private set; }
+    public UserReviewSummaryDto? SellerReviewSummary { get; private set; }
 
     public async Task<IActionResult> OnGetAsync(int id)
     {
@@ -44,6 +47,13 @@ public class DetailsModel : PageModel
         }
 
         Listing = listing;
+
+        // Lấy thông tin đánh giá của seller
+        if (listing.SellerId > 0)
+        {
+            SellerReviewSummary = await _reviewService.GetUserReviewSummaryAsync(listing.SellerId);
+        }
+
         return Page();
     }
 

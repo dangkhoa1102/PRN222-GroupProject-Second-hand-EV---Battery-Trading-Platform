@@ -1,0 +1,149 @@
+@page "{orderId:int}"
+@model GroupProject.Pages.Reviews.CreateModel
+@{
+    ViewData["Title"] = "Đánh giá người bán";
+}
+
+<div class="page-header">
+    <h1>Đánh giá người bán</h1>
+    <a class="btn btn-link" asp-page="OrderHistory">Quay lại lịch sử đơn hàng</a>
+</div>
+
+@if (!string.IsNullOrEmpty(Model.ErrorMessage))
+{
+    <div class="alert alert-danger">@Model.ErrorMessage</div>
+}
+
+@if (!string.IsNullOrEmpty(Model.SuccessMessage))
+{
+    <div class="alert alert-success">@Model.SuccessMessage</div>
+}
+
+<div class="card-modern">
+    <form method="post">
+        <input type="hidden" asp-for="Input.OrderId" />
+
+        <div class="mb-4">
+            <label asp-for="Input.Rating" class="form-label fw-semibold">
+                Đánh giá <span class="text-danger">*</span>
+            </label>
+            <div class="rating-input">
+                @for (int i = 1; i <= 5; i++)
+                {
+                    <input type="radio" asp-for="Input.Rating" value="@i" id="rating@i" class="d-none" data-rating="@i" />
+                    <label for="rating@i" class="star-label" data-rating="@i">★</label>
+                }
+            </div>
+            <span asp-validation-for="Input.Rating" class="text-danger"></span>
+        </div>
+
+        <div class="mb-4">
+            <label asp-for="Input.Comment" class="form-label fw-semibold">
+                Nhận xét
+            </label>
+            <textarea asp-for="Input.Comment" class="form-control" rows="5" 
+                      placeholder="Chia sẻ trải nghiệm của bạn về sản phẩm và người bán..."></textarea>
+            <span asp-validation-for="Input.Comment" class="text-danger"></span>
+            <small class="form-text text-muted">Tối đa 1000 ký tự</small>
+        </div>
+
+        <div class="d-flex gap-2">
+            <button type="submit" class="btn btn-primary">Gửi đánh giá</button>
+            <a asp-page="OrderHistory" class="btn btn-outline-secondary">Hủy</a>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        (function() {
+            const ratingInput = document.querySelector('.rating-input');
+            const starLabels = document.querySelectorAll('.star-label');
+            const radioInputs = document.querySelectorAll('input[name="Input.Rating"]');
+
+            // Function to highlight stars based on rating value
+            function highlightStars(rating) {
+                const ratingValue = parseInt(rating) || 0;
+                starLabels.forEach((label) => {
+                    const starRating = parseInt(label.getAttribute('data-rating')) || 0;
+                    if (starRating <= ratingValue) {
+                        label.classList.add('active');
+                    } else {
+                        label.classList.remove('active');
+                    }
+                });
+            }
+
+            // Handle star label click
+            starLabels.forEach((label) => {
+                label.addEventListener('click', function(e) {
+                    const rating = label.getAttribute('data-rating');
+                    const radio = document.getElementById('rating' + rating);
+                    if (radio) {
+                        radio.checked = true;
+                        highlightStars(rating);
+                    }
+                });
+
+                // Handle hover
+                label.addEventListener('mouseenter', function() {
+                    const rating = label.getAttribute('data-rating');
+                    highlightStars(rating);
+                });
+            });
+
+            // Handle radio button change
+            radioInputs.forEach(radio => {
+                radio.addEventListener('change', function() {
+                    highlightStars(this.value);
+                });
+            });
+
+            // Reset to selected rating when mouse leaves
+            ratingInput.addEventListener('mouseleave', function() {
+                const checkedRadio = document.querySelector('input[name="Input.Rating"]:checked');
+                if (checkedRadio) {
+                    highlightStars(checkedRadio.value);
+                } else {
+                    // Remove all active classes if nothing is selected
+                    starLabels.forEach(label => label.classList.remove('active'));
+                }
+            });
+
+            // Initialize on page load
+            const checkedRadio = document.querySelector('input[name="Input.Rating"]:checked');
+            if (checkedRadio) {
+                highlightStars(checkedRadio.value);
+            }
+        })();
+    </script>
+}
+
+<style>
+    .rating-input {
+        display: flex;
+        flex-direction: row;
+        justify-content: flex-start;
+        gap: 5px;
+    }
+
+    .star-label {
+        font-size: 2rem;
+        color: #ddd;
+        cursor: pointer;
+        transition: color 0.2s;
+        user-select: none;
+    }
+
+    /* Only highlight stars with active class (set by JavaScript) */
+    .star-label.active {
+        color: #ffc107;
+    }
+
+    /* Hover effect - only visual feedback */
+    .star-label:hover {
+        color: #ffc107;
+    }
+</style>
+
