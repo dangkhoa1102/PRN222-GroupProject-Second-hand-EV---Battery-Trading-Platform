@@ -3,6 +3,7 @@ using System.IO;
 using System.Linq;
 using BLL.DTOs;
 using BLL.Services;
+using GroupProject.Services;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -15,13 +16,15 @@ namespace GroupProject.Pages.BatteryListings;
 public class UpsertModel : PageModel
 {
     private readonly IBatteryListingService _batteryListingService;
+    private readonly INotificationService _notificationService;
     private readonly IWebHostEnvironment _environment;
     private static readonly CultureInfo VietnameseCulture = CultureInfo.GetCultureInfo("vi-VN");
     private static readonly string[] AllowedImageExtensions = [".jpg", ".jpeg", ".png", ".gif", ".webp"];
 
-    public UpsertModel(IBatteryListingService batteryListingService, IWebHostEnvironment environment)
+    public UpsertModel(IBatteryListingService batteryListingService, INotificationService notificationService, IWebHostEnvironment environment)
     {
         _batteryListingService = batteryListingService;
+        _notificationService = notificationService;
         _environment = environment;
     }
 
@@ -125,19 +128,46 @@ public class UpsertModel : PageModel
         }
 
         ListingActionResultDto result;
+        int listingId = 0;
+        string listingName = $"{Input.Brand} {Input.BatteryType}";
+        
         if (IsEdit && Id.HasValue)
         {
+            listingId = Id.Value;
             result = await _batteryListingService.UpdateListingAsync(sellerId.Value, Id.Value, Input);
         }
         else
         {
             result = await _batteryListingService.CreateListingAsync(sellerId.Value, Input);
+            // Lấy listingId từ kết quả - lấy listing mới nhất
+            if (result.IsSuccess)
+            {
+                var listings = await _batteryListingService.GetMyListingsAsync(sellerId.Value);
+                var newListing = listings.FirstOrDefault(l => l.Brand == Input.Brand && l.BatteryType == Input.BatteryType);
+                if (newListing != null)
+                {
+                    listingId = newListing.BatteryId;
+                }
+            }
         }
 
         if (!result.IsSuccess)
         {
             ErrorMessage = result.ErrorMessage;
             return Page();
+        }
+
+        // Gửi SignalR notification
+        if (result.IsSuccess && listingId > 0)
+        {
+            if (IsEdit)
+            {
+                await _notificationService.NotifyListingUpdatedAsync(listingId, "Battery", sellerId.Value, listingName);
+            }
+            else
+            {
+                await _notificationService.NotifyListingCreatedAsync(listingId, "Battery", sellerId.Value, listingName);
+            }
         }
 
         TempData["FlashMessage"] = IsEdit ? "Đã cập nhật tin pin." : "Đã tạo tin pin mới.";

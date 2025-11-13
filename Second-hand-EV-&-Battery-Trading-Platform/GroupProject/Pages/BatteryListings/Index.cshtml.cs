@@ -1,6 +1,7 @@
 using BLL.Constants;
 using BLL.DTOs;
 using BLL.Services;
+using GroupProject.Services;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
@@ -10,10 +11,12 @@ namespace GroupProject.Pages.BatteryListings;
 public class IndexModel : PageModel
 {
     private readonly IBatteryListingService _batteryListingService;
+    private readonly INotificationService _notificationService;
 
-    public IndexModel(IBatteryListingService batteryListingService)
+    public IndexModel(IBatteryListingService batteryListingService, INotificationService notificationService)
     {
         _batteryListingService = batteryListingService;
+        _notificationService = notificationService;
     }
 
     public List<BatteryListingDto> Listings { get; private set; } = new();
@@ -82,7 +85,16 @@ public class IndexModel : PageModel
             return RedirectToPage("/Account/Login");
         }
 
+        var listing = await _batteryListingService.GetListingDetailAsync(id);
+        var listingName = listing != null ? $"{listing.Brand} {listing.BatteryType}" : $"Tin đăng #{id}";
+
         var result = await _batteryListingService.SubmitForReviewAsync(sellerId.Value, id);
+        
+        if (result.IsSuccess)
+        {
+            await _notificationService.NotifyListingSubmittedAsync(id, "Battery", sellerId.Value, listingName);
+        }
+
         TempData[result.IsSuccess ? "FlashMessage" : "ErrorMessage"] = result.IsSuccess
             ? "Đã gửi tin đăng pin lên staff phê duyệt."
             : result.ErrorMessage;
@@ -98,7 +110,16 @@ public class IndexModel : PageModel
             return RedirectToPage("/Account/Login");
         }
 
+        var listing = await _batteryListingService.GetListingDetailAsync(id);
+        var listingName = listing != null ? $"{listing.Brand} {listing.BatteryType}" : $"Tin đăng #{id}";
+
         var result = await _batteryListingService.HideListingAsync(sellerId.Value, id);
+        
+        if (result.IsSuccess)
+        {
+            await _notificationService.NotifyListingHiddenAsync(id, "Battery", sellerId.Value, listingName);
+        }
+
         TempData[result.IsSuccess ? "FlashMessage" : "ErrorMessage"] = result.IsSuccess
             ? "Đã tạm ẩn tin đăng pin."
             : result.ErrorMessage;
@@ -114,7 +135,16 @@ public class IndexModel : PageModel
             return RedirectToPage("/Account/Login");
         }
 
+        var listing = await _batteryListingService.GetListingDetailAsync(id);
+        var listingName = listing != null ? $"{listing.Brand} {listing.BatteryType}" : $"Tin đăng #{id}";
+
         var result = await _batteryListingService.DeleteListingAsync(sellerId.Value, id);
+        
+        if (result.IsSuccess)
+        {
+            await _notificationService.NotifyListingDeletedAsync(id, "Battery", sellerId.Value, listingName);
+        }
+
         TempData[result.IsSuccess ? "FlashMessage" : "ErrorMessage"] = result.IsSuccess
             ? "Đã xóa tin đăng pin."
             : result.ErrorMessage;

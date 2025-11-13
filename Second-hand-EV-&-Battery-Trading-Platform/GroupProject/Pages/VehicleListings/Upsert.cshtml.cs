@@ -1,6 +1,7 @@
 using System.Globalization;
 using BLL.DTOs;
 using BLL.Services;
+using GroupProject.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 
@@ -9,13 +10,15 @@ namespace GroupProject.Pages.VehicleListings;
 public class UpsertModel : PageModel
 {
     private readonly IVehicleListingService _vehicleListingService;
+    private readonly INotificationService _notificationService;
     private readonly IWebHostEnvironment _environment;
     private static readonly CultureInfo VietnameseCulture = CultureInfo.GetCultureInfo("vi-VN");
     private static readonly string[] AllowedImageExtensions = [".jpg", ".jpeg", ".png", ".gif", ".webp"];
 
-    public UpsertModel(IVehicleListingService vehicleListingService, IWebHostEnvironment environment)
+    public UpsertModel(IVehicleListingService vehicleListingService, INotificationService notificationService, IWebHostEnvironment environment)
     {
         _vehicleListingService = vehicleListingService;
+        _notificationService = notificationService;
         _environment = environment;
     }
 
@@ -119,19 +122,46 @@ public class UpsertModel : PageModel
         }
 
         ListingActionResultDto result;
+        int listingId = 0;
+        string listingName = $"{Input.Brand} {Input.Model}";
+        
         if (IsEdit && Id.HasValue)
         {
+            listingId = Id.Value;
             result = await _vehicleListingService.UpdateListingAsync(sellerId.Value, Id.Value, Input);
         }
         else
         {
             result = await _vehicleListingService.CreateListingAsync(sellerId.Value, Input);
+            // Lấy listingId từ kết quả - lấy listing mới nhất
+            if (result.IsSuccess)
+            {
+                var listings = await _vehicleListingService.GetMyListingsAsync(sellerId.Value);
+                var newListing = listings.FirstOrDefault(l => l.Brand == Input.Brand && l.Model == Input.Model);
+                if (newListing != null)
+                {
+                    listingId = newListing.VehicleId;
+                }
+            }
         }
 
         if (!result.IsSuccess)
         {
             ErrorMessage = result.ErrorMessage;
             return Page();
+        }
+
+        // Gửi SignalR notification
+        if (result.IsSuccess && listingId > 0)
+        {
+            if (IsEdit)
+            {
+                await _notificationService.NotifyListingUpdatedAsync(listingId, "Vehicle", sellerId.Value, listingName);
+            }
+            else
+            {
+                await _notificationService.NotifyListingCreatedAsync(listingId, "Vehicle", sellerId.Value, listingName);
+            }
         }
 
         TempData["FlashMessage"] = IsEdit ? "Đã cập nhật tin đăng." : "Đã tạo tin đăng mới.";

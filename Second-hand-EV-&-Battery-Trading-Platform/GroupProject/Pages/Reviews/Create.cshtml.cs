@@ -1,5 +1,6 @@
 using BLL.DTOs;
 using BLL.Services;
+using GroupProject.Services;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
@@ -9,10 +10,12 @@ namespace GroupProject.Pages.Reviews;
 public class CreateModel : PageModel
 {
     private readonly IReviewService _reviewService;
+    private readonly INotificationService _notificationService;
 
-    public CreateModel(IReviewService reviewService)
+    public CreateModel(IReviewService reviewService, INotificationService notificationService)
     {
         _reviewService = reviewService;
+        _notificationService = notificationService;
     }
 
     [BindProperty]
@@ -65,6 +68,17 @@ public class CreateModel : PageModel
             ErrorMessage = result.ErrorMessage;
             OrderId = Input.OrderId;
             return Page();
+        }
+
+        // Lấy thông tin review để gửi notification
+        if (result.IsSuccess && result.ReviewId.HasValue)
+        {
+            var review = await _reviewService.GetReviewByIdAsync(result.ReviewId.Value);
+            if (review != null)
+            {
+                var reviewerName = HttpContext.Session.GetString("FullName") ?? "Người dùng";
+                await _notificationService.NotifyNewReviewAsync(result.ReviewId.Value, review.ReviewedUserId, reviewerName, review.Rating);
+            }
         }
 
         TempData["ReviewSuccess"] = "Đánh giá của bạn đã được gửi thành công!";

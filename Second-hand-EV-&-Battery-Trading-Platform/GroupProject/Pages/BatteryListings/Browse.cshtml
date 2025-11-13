@@ -1,0 +1,122 @@
+@page
+@model GroupProject.Pages.BatteryListings.BrowseModel
+@{
+    ViewData["Title"] = "Danh sách pin điện đã duyệt";
+    ViewData["FullWidth"] = true;
+}
+
+<div class="page-header">
+    <h1>Danh sách pin điện đã duyệt</h1>
+    <div class="text-muted small">
+        <i class="bi bi-info-circle"></i> Tổng cộng: <strong>@Model.TotalCount</strong> tin đăng
+    </div>
+</div>
+
+<!-- Search và Filter -->
+<div class="card-modern mb-4">
+    <form method="get" class="row g-3">
+        <div class="col-md-6">
+            <label for="search" class="form-label">Tìm kiếm</label>
+            <input type="text" 
+                   class="form-control" 
+                   id="search" 
+                   name="search" 
+                   value="@Model.SearchKeyword" 
+                   placeholder="Nhập loại pin, hãng, dung lượng, điện áp...">
+        </div>
+        <div class="col-md-4">
+            <label for="brand" class="form-label">Hãng pin</label>
+            <select class="form-select" id="brand" name="brand">
+                <option value="">-- Tất cả hãng --</option>
+                @if (ViewData["Brands"] is List<Microsoft.AspNetCore.Mvc.Rendering.SelectListItem> brands)
+                {
+                    @foreach (var brand in brands)
+                    {
+                        <option value="@brand.Value" selected="@(brand.Value == Model.SelectedBrand)">@brand.Text</option>
+                    }
+                }
+            </select>
+        </div>
+        <div class="col-md-2 d-flex align-items-end">
+            <button type="submit" class="btn btn-primary w-100">
+                <i class="bi bi-search"></i> Tìm kiếm
+            </button>
+        </div>
+    </form>
+    @if (!string.IsNullOrWhiteSpace(Model.SearchKeyword) || !string.IsNullOrWhiteSpace(Model.SelectedBrand))
+    {
+        <div class="mt-3">
+            <a asp-page="Browse" class="btn btn-sm btn-outline-secondary">
+                <i class="bi bi-x-circle"></i> Xóa bộ lọc
+            </a>
+        </div>
+    }
+</div>
+
+<!-- Danh sách pin -->
+@if (Model.Listings.Any())
+{
+    <div class="market-grid">
+        @foreach (var battery in Model.Listings)
+        {
+            <article class="market-card">
+                <div class="market-card__media">
+                    @if (!string.IsNullOrWhiteSpace(battery.ImageUrl))
+                    {
+                        <img src="@battery.ImageUrl" alt="Ảnh pin @battery.Brand @battery.BatteryType" />
+                    }
+                    else
+                    {
+                        <div class="market-card__media--placeholder">Không ảnh</div>
+                    }
+                </div>
+                <div class="market-card__body">
+                    <h3 class="market-card__title">@battery.Brand @battery.BatteryType</h3>
+                    <div class="market-card__price">@battery.Price.ToString("N0") đ</div>
+                    <dl class="market-card__meta">
+                        <div>
+                            <dt>Người đăng</dt>
+                            <dd>@(string.IsNullOrWhiteSpace(battery.SellerName) ? "Không rõ" : battery.SellerName)</dd>
+                        </div>
+                        <div>
+                            <dt>Dung lượng</dt>
+                            <dd>@battery.Capacity</dd>
+                        </div>
+                        <div>
+                            <dt>Điện áp</dt>
+                            <dd>@(string.IsNullOrWhiteSpace(battery.Voltage) ? "—" : battery.Voltage)</dd>
+                        </div>
+                        <div>
+                            <dt>Tình trạng</dt>
+                            <dd>@battery.Condition</dd>
+                        </div>
+                    </dl>
+                </div>
+                <div class="market-card__footer">
+                    <a class="btn btn-chip btn-chip-neutral" 
+                       asp-page="Details" 
+                       asp-route-id="@battery.BatteryId"
+                       asp-route-returnUrl="@Model.CurrentPageUrl">Xem chi tiết</a>
+                </div>
+            </article>
+        }
+    </div>
+}
+else
+{
+    <div class="market-empty">
+        @if (!string.IsNullOrWhiteSpace(Model.SearchKeyword) || !string.IsNullOrWhiteSpace(Model.SelectedBrand))
+        {
+            <p class="mb-2"><strong>Không tìm thấy pin nào phù hợp với bộ lọc.</strong></p>
+            <p class="text-muted mb-0">Hãy thử thay đổi từ khóa tìm kiếm hoặc bộ lọc.</p>
+            <a asp-page="Browse" class="btn btn-primary mt-3">
+                <i class="bi bi-arrow-left"></i> Xem tất cả
+            </a>
+        }
+        else
+        {
+            <p class="mb-0"><strong>Chưa có tin pin nào được duyệt.</strong></p>
+        }
+    </div>
+}
+

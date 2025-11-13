@@ -1,0 +1,164 @@
+@page
+@model GroupProject.Pages.Seller.Orders.IndexModel
+@{
+    ViewData["Title"] = "Quản lý đơn hàng";
+}
+
+<div class="container mt-4">
+    <h2 class="mb-4">Quản lý đơn hàng của tôi</h2>
+
+    @if (!string.IsNullOrEmpty(Model.StatusMessage))
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            @Model.StatusMessage
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            @TempData["Success"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            @TempData["Error"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <!-- Bảng đơn hàng -->
+    @if (Model.AllOrders.Any())
+    {
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Mã đơn</th>
+                        <th>Loại</th>
+                        <th>Người mua</th>
+                        <th>Số tiền</th>
+                        <th>Thanh toán</th>
+                        <th>Ngày đặt</th>
+                        <th>Trạng thái</th>
+                        <th>Thao tác</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var order in Model.AllOrders)
+                    {
+                        <tr>
+                            <td><strong>#@order.OrderId</strong></td>
+                            <td>
+                                @if (order.OrderType == "Vehicle")
+                                {
+                                    <span class="badge bg-primary text-white">Xe điện</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-info text-white">Pin</span>
+                                }
+                            </td>
+                            <td>
+                                <div>@order.BuyerName</div>
+                                <small class="text-muted">@order.BuyerEmail</small>
+                            </td>
+                            <td><strong>@order.TotalAmount.ToString("N0") đ</strong></td>
+                            <td>@(string.IsNullOrEmpty(order.PaymentMethod) ? "Chưa chọn" : order.PaymentMethod)</td>
+                            <td>@order.CreatedDate?.ToString("dd/MM/yyyy HH:mm")</td>
+                            <td>
+                                <span class="badge bg-@(order.OrderStatus switch
+                                {
+                                    "Pending" => "warning text-dark",
+                                    "Confirmed" => "info",
+                                    "Paid" => "primary",
+                                    "Delivering" => "primary",
+                                    "Delivered" => "primary",
+                                    "Completed" => "success",
+                                    "Cancelled" => "danger",
+                                    _ => "secondary"
+                                })">@order.Status</span>
+                            </td>
+                            <td>
+                                <div class="btn-group" role="group">
+                                    <a asp-page="/Seller/Orders/Detail" asp-route-id="@order.OrderId" class="btn btn-sm btn-outline-primary" title="Xem chi tiết">
+                                        <i class="bi bi-eye"></i>
+                                    </a>
+                                    @if (order.OrderStatus == "Pending")
+                                    {
+                                        <form method="post" asp-page-handler="Confirm" asp-route-id="@order.OrderId" class="d-inline" onsubmit="return confirm('Xác nhận đơn hàng #@order.OrderId?')">
+                                            <button type="submit" class="btn btn-sm btn-success" title="Xác nhận">
+                                                <i class="bi bi-check-circle"></i>
+                                            </button>
+                                        </form>
+                                    }
+                                    @{
+                                        var canCancel = order.OrderStatus == "Pending" || order.OrderStatus == "Confirmed" || order.OrderStatus == "Paid" || order.OrderStatus == "Delivering";
+                                    }
+                                    @if (canCancel)
+                                    {
+                                        <button type="button" class="btn btn-sm btn-danger" title="Hủy đơn hàng" 
+                                                onclick="showCancelForm(@order.OrderId)">
+                                            <i class="bi bi-x-circle"></i>
+                                        </button>
+                                    }
+                                </div>
+                                
+                                @if (canCancel)
+                                {
+                                    <div id="cancelForm-@order.OrderId" class="mt-2 p-3 border rounded bg-light" style="display: none;">
+                                        <form method="post" asp-page-handler="Cancel" asp-route-id="@order.OrderId" onsubmit="return validateCancelForm(@order.OrderId)">
+                                            <div class="mb-2">
+                                                <label for="cancelReason-@order.OrderId" class="form-label small">Lý do hủy:</label>
+                                                <textarea id="cancelReason-@order.OrderId" name="reason" class="form-control form-control-sm" rows="2" required placeholder="Nhập lý do hủy đơn hàng..."></textarea>
+                                            </div>
+                                            <div class="d-flex gap-2">
+                                                <button type="submit" class="btn btn-sm btn-danger">
+                                                    <i class="bi bi-x-circle"></i> Xác nhận hủy
+                                                </button>
+                                                <button type="button" class="btn btn-sm btn-secondary" onclick="hideCancelForm(@order.OrderId)">
+                                                    Hủy
+                                                </button>
+                                            </div>
+                                        </form>
+                                    </div>
+                                }
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+    else
+    {
+        <div class="alert alert-info">
+            <i class="bi bi-info-circle"></i> Chưa có đơn hàng nào.
+        </div>
+    }
+</div>
+
+<script>
+    function showCancelForm(orderId) {
+        document.getElementById('cancelForm-' + orderId).style.display = 'block';
+    }
+    
+    function hideCancelForm(orderId) {
+        document.getElementById('cancelForm-' + orderId).style.display = 'none';
+        document.getElementById('cancelReason-' + orderId).value = '';
+    }
+    
+    function validateCancelForm(orderId) {
+        var reason = document.getElementById('cancelReason-' + orderId).value.trim();
+        if (!reason) {
+            alert('Vui lòng nhập lý do hủy đơn hàng.');
+            return false;
+        }
+        return confirm('Bạn có chắc chắn muốn hủy đơn hàng #' + orderId + '?');
+    }
+</script>
+

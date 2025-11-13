@@ -12,6 +12,7 @@ public class OrderRepository : IOrderRepository
         _context = context;
     }
 
+    // Methods from main branch
     public Task<Order?> GetByIdAsync(int orderId, CancellationToken cancellationToken = default)
     {
         return _context.Orders
@@ -88,5 +89,46 @@ public class OrderRepository : IOrderRepository
         var existingReview = order.Reviews.FirstOrDefault(r => r.ReviewerId == userId && r.ReviewedUserId == order.SellerId);
         return existingReview == null;
     }
-}
 
+    // Methods from HEAD branch (seller-specific)
+    public Task<List<Order>> GetSellerOrdersAsync(int sellerId, CancellationToken cancellationToken = default)
+    {
+        return _context.Orders
+            .Include(o => o.Buyer)
+            .Include(o => o.VehicleOrder)
+                .ThenInclude(vo => vo.Vehicle)
+            .Include(o => o.BatteryOrder)
+                .ThenInclude(bo => bo.Battery)
+            .Where(o => o.SellerId == sellerId)
+            .OrderByDescending(o => o.CreatedDate)
+            .ToListAsync(cancellationToken);
+    }
+
+    public Task<Order?> GetOrderDetailAsync(int orderId, int sellerId, CancellationToken cancellationToken = default)
+    {
+        return _context.Orders
+            .Include(o => o.Buyer)
+            .Include(o => o.VehicleOrder)
+                .ThenInclude(vo => vo.Vehicle)
+            .Include(o => o.BatteryOrder)
+                .ThenInclude(bo => bo.Battery)
+            .FirstOrDefaultAsync(o => o.OrderId == orderId && o.SellerId == sellerId, cancellationToken);
+    }
+
+    public Task UpdateOrderAsync(Order order, CancellationToken cancellationToken = default)
+    {
+        _context.Orders.Update(order);
+        return Task.CompletedTask;
+    }
+
+    public Task DeleteOrderAsync(Order order, CancellationToken cancellationToken = default)
+    {
+        _context.Orders.Remove(order);
+        return Task.CompletedTask;
+    }
+
+    public Task SaveChangesAsync(CancellationToken cancellationToken = default)
+    {
+        return _context.SaveChangesAsync(cancellationToken);
+    }
+}
