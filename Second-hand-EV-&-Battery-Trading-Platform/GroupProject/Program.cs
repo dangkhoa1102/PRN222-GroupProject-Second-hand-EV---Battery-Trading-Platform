@@ -1,4 +1,7 @@
 using BLL.Services;
+using DAL.Models;
+using DAL.Repository;
+using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -12,6 +15,14 @@ builder.Services.AddSession(options =>
     options.Cookie.IsEssential = true;
 });
 
+// Register DbContext
+builder.Services.AddDbContext<EVTradingPlatformContext>(options =>
+    options.UseSqlServer(builder.Configuration.GetConnectionString("MyDbConnection")));
+
+// Register Repositories
+builder.Services.AddScoped<IOrderRepository, OrderRepository>();
+
+// Register Services
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IVehicleListingService, VehicleListingService>();
 builder.Services.AddScoped<IBatteryListingService, BatteryListingService>();
