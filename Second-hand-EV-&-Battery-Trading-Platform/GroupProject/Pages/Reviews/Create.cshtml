@@ -61,60 +61,98 @@
             const ratingInput = document.querySelector('.rating-input');
             const starLabels = document.querySelectorAll('.star-label');
             const radioInputs = document.querySelectorAll('input[name="Input.Rating"]');
+            let selectedRating = 0;
+            let isHovering = false;
 
             // Function to highlight stars based on rating value
-            function highlightStars(rating) {
+            function highlightStars(rating, isPreview = false) {
                 const ratingValue = parseInt(rating) || 0;
-                starLabels.forEach((label) => {
-                    const starRating = parseInt(label.getAttribute('data-rating')) || 0;
-                    if (starRating <= ratingValue) {
-                        label.classList.add('active');
-                    } else {
-                        label.classList.remove('active');
+                // Remove all active classes first
+                starLabels.forEach(label => {
+                    label.classList.remove('active');
+                    label.classList.remove('preview');
+                });
+                
+                // Add active class to stars up to the selected rating
+                starLabels.forEach((label, index) => {
+                    const starNumber = index + 1;
+                    if (starNumber <= ratingValue && ratingValue > 0) {
+                        if (isPreview) {
+                            label.classList.add('preview');
+                        } else {
+                            label.classList.add('active');
+                        }
                     }
                 });
             }
 
-            // Handle star label click
-            starLabels.forEach((label) => {
+            // Handle label click - this is the main interaction
+            starLabels.forEach((label, index) => {
+                const starNumber = index + 1;
+                // Find radio button by data-rating attribute
+                const dataRating = label.getAttribute('data-rating');
+                const radio = Array.from(radioInputs).find(r => r.getAttribute('data-rating') === dataRating);
+                
+                if (!radio) {
+                    console.error('Radio not found for star', starNumber, 'dataRating:', dataRating);
+                    return;
+                }
+                
                 label.addEventListener('click', function(e) {
-                    const rating = label.getAttribute('data-rating');
-                    const radio = document.getElementById('rating' + rating);
-                    if (radio) {
-                        radio.checked = true;
-                        highlightStars(rating);
-                    }
-                });
-
-                // Handle hover
-                label.addEventListener('mouseenter', function() {
-                    const rating = label.getAttribute('data-rating');
-                    highlightStars(rating);
-                });
-            });
-
-            // Handle radio button change
-            radioInputs.forEach(radio => {
-                radio.addEventListener('change', function() {
-                    highlightStars(this.value);
+                    e.preventDefault();
+                    e.stopPropagation();
+                    
+                    // Uncheck all radios first
+                    radioInputs.forEach(r => r.checked = false);
+                    
+                    // Check the selected radio
+                    radio.checked = true;
+                    selectedRating = starNumber;
+                    
+                    // Highlight stars
+                    highlightStars(starNumber, false);
+                    
+                    // Trigger change event
+                    radio.dispatchEvent(new Event('change', { bubbles: true }));
                 });
             });
+
+            // Handle hover - show preview only when hovering (disabled for now to avoid conflicts)
+            // starLabels.forEach((label, index) => {
+            //     const starNumber = index + 1;
+            //     
+            //     label.addEventListener('mouseenter', function() {
+            //         isHovering = true;
+            //         highlightStars(starNumber, true);
+            //     });
+            // });
 
             // Reset to selected rating when mouse leaves
             ratingInput.addEventListener('mouseleave', function() {
-                const checkedRadio = document.querySelector('input[name="Input.Rating"]:checked');
-                if (checkedRadio) {
-                    highlightStars(checkedRadio.value);
+                isHovering = false;
+                if (selectedRating > 0) {
+                    highlightStars(selectedRating, false);
                 } else {
-                    // Remove all active classes if nothing is selected
-                    starLabels.forEach(label => label.classList.remove('active'));
+                    starLabels.forEach(label => {
+                        label.classList.remove('active');
+                        label.classList.remove('preview');
+                    });
                 }
+            });
+
+            // Handle radio button change (backup)
+            radioInputs.forEach(radio => {
+                radio.addEventListener('change', function() {
+                    selectedRating = parseInt(this.value) || 0;
+                    highlightStars(selectedRating, false);
+                });
             });
 
             // Initialize on page load
             const checkedRadio = document.querySelector('input[name="Input.Rating"]:checked');
             if (checkedRadio) {
-                highlightStars(checkedRadio.value);
+                selectedRating = parseInt(checkedRadio.value) || 0;
+                highlightStars(selectedRating, false);
             }
         })();
     </script>
@@ -138,11 +176,11 @@
 
     /* Only highlight stars with active class (set by JavaScript) */
     .star-label.active {
-        color: #ffc107;
+        color: #ffc107 !important;
     }
 
-    /* Hover effect - only visual feedback */
-    .star-label:hover {
+    /* Preview effect when hovering */
+    .star-label.preview {
         color: #ffc107;
     }
 </style>

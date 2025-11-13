@@ -28,7 +28,7 @@
                     <span class="ms-2">@Model.Review.Rating / 5 sao</span>
                 </div>
             </div>
-            <small class="text-muted">@Model.Review.CreatedDate?.ToString("dd/MM/yyyy HH:mm")</small>
+            <small class="text-muted">@Model.Review.CreatedDate?.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</small>
         </div>
 
         @if (!string.IsNullOrWhiteSpace(Model.Review.Comment))

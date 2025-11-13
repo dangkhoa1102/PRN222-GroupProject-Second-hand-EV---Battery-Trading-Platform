@@ -24,7 +24,7 @@
                         <div>
                             <h5 class="mb-1">Đơn hàng #@order.OrderId</h5>
                             <p class="text-muted mb-0">
-                                <small>Ngày hoàn thành: @(order.CompletedDate?.ToString("dd/MM/yyyy HH:mm") ?? "—")</small>
+                                <small>Ngày hoàn thành: @(order.CompletedDate?.ToLocalTime().ToString("dd/MM/yyyy HH:mm") ?? "—")</small>
                             </p>
                         </div>
                         <div class="text-end">
@@ -45,7 +45,7 @@
                             <strong>Phương thức thanh toán:</strong> @(order.PaymentMethod ?? "—")
                         </div>
                         <div class="col-md-6 mt-2">
-                            <strong>Ngày tạo:</strong> @(order.CreatedDate?.ToString("dd/MM/yyyy HH:mm") ?? "—")
+                            <strong>Ngày tạo:</strong> @(order.CreatedDate?.ToLocalTime().ToString("dd/MM/yyyy HH:mm") ?? "—")
                         </div>
                     </div>
 

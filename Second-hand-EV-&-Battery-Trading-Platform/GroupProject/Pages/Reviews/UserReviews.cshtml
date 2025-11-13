@@ -87,7 +87,7 @@
                                 <span class="ms-2 text-muted">(@review.Rating sao)</span>
                             </div>
                         </div>
-                        <small class="text-muted">@review.CreatedDate?.ToString("dd/MM/yyyy HH:mm")</small>
+                        <small class="text-muted">@review.CreatedDate?.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</small>
                     </div>
 
                     @if (!string.IsNullOrWhiteSpace(review.Comment))
