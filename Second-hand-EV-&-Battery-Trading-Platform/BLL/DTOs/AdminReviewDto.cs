@@ -1,6 +1,6 @@
 ﻿namespace BLL.DTOs
 {
-    public class ReviewDto
+    public class AdminReviewDto
     {
         public int ReviewId { get; set; }
         public int OrderId { get; set; }

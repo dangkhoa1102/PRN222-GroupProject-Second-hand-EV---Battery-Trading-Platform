@@ -13,7 +13,7 @@ namespace GroupProject.Pages.Admin
             _reviewService = reviewService;
         }
 
-        public List<ReviewDto> Reviews { get; private set; } = new();
+        public List<AdminReviewDto> Reviews { get; private set; } = new();
 
         public async Task OnGetAsync()
         {
