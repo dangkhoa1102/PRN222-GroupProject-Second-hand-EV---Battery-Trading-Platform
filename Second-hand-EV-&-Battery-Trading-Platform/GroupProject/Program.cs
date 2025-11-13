@@ -1,5 +1,6 @@
-using BLL.Services;
 using BLL.Configuration;
+using BLL.Services;
+using DAL.Repositories.Admin;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -20,6 +21,7 @@ builder.Services.AddScoped<IReviewService, ReviewService>();
 
 builder.Services.AddAdminTransactionService(builder.Configuration);
 builder.Services.AddScoped<IAdminReviewService, AdminReviewService>();
+//builder.Services.AddScoped<IAdminReviewRepository, AdminReviewRepository>();
 
 
 var app = builder.Build();

@@ -1,5 +1,6 @@
 ﻿using BLL.DTOs;
 using DAL.Models;
+using DAL.Repositories.Admin;
 using Microsoft.EntityFrameworkCore;
 
 namespace BLL.Services
@@ -7,10 +8,11 @@ namespace BLL.Services
     public class AdminReviewService : IAdminReviewService
     {
         private readonly EVTradingPlatformContext _context;
-
-        public AdminReviewService(EVTradingPlatformContext context)
+        private readonly IAdminReviewRepository _reviewRepo;
+        public AdminReviewService(EVTradingPlatformContext context, IAdminReviewRepository reviewRepo)
         {
             _context = context;
+            _reviewRepo = reviewRepo;
         }
 
         public async Task<List<AdminReviewDto>> GetAllReviewsAsync()
@@ -32,6 +34,10 @@ namespace BLL.Services
             return await query
                 .OrderByDescending(r => r.CreatedDate)
                 .ToListAsync();
+        }
+        public async Task DeleteReviewAsync(int id)
+        {
+            await _reviewRepo.DeleteReviewAsync(id);
         }
     }
 }

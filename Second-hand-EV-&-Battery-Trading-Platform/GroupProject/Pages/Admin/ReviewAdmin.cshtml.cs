@@ -1,6 +1,7 @@
-using BLL.Services;
-using Microsoft.AspNetCore.Mvc.RazorPages;
 using BLL.DTOs;
+using BLL.Services;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.RazorPages;
 
 namespace GroupProject.Pages.Admin
 {
@@ -18,6 +19,12 @@ namespace GroupProject.Pages.Admin
         public async Task OnGetAsync()
         {
             Reviews = await _reviewService.GetAllReviewsAsync();
+        }
+        public async Task<IActionResult> OnPostDeleteAsync(int id)
+        {
+            await _reviewService.DeleteReviewAsync(id);
+
+            return RedirectToPage(); // load l?i list
         }
     }
 }
