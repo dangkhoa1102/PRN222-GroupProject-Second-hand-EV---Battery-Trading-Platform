@@ -2,6 +2,7 @@ using BLL.Constants;
 using BLL.DTOs;
 using DAL.Models;
 using DAL.Repository;
+using Microsoft.EntityFrameworkCore;
 
 namespace BLL.Services;
 
@@ -166,21 +167,25 @@ public class VehicleListingService : IVehicleListingService
             return ListingActionResultDto.Failure("Tin đăng không tồn tại.");
         }
 
-        if (vehicle.Status == ListingStatus.Rejected)
-        {
-            return ListingActionResultDto.Failure("Tin đăng đã bị từ chối, không thể xóa.");
-        }
-
-        if (vehicle.Status is not ListingStatus.Draft and not ListingStatus.Hidden)
-        {
-            return ListingActionResultDto.Failure("Chỉ có thể xóa tin ở trạng thái bản nháp hoặc đã ẩn.");
-        }
-
         if (vehicle.SellerId != sellerId)
         {
             return ListingActionResultDto.Failure("Bạn không có quyền xoá tin đăng này.");
         }
 
+        // Kiểm tra xem có đơn hàng nào đang active không (Pending, Confirmed, Paid, Delivering, Delivered)
+        var activeOrderStatuses = new[] { "Pending", "Confirmed", "Paid", "Delivering", "Delivered" };
+        var hasActiveOrder = await context.VehicleOrders
+            .Include(vo => vo.Order)
+            .AnyAsync(vo => vo.VehicleId == vehicleId && 
+                           activeOrderStatuses.Contains(vo.Order.OrderStatus), 
+                      cancellationToken);
+
+        if (hasActiveOrder)
+        {
+            return ListingActionResultDto.Failure("Không thể xóa tin đăng này vì có người đang chọn mua sản phẩm. Vui lòng đợi đơn hàng hoàn thành hoặc bị hủy.");
+        }
+
+        // Cho phép xóa bất kể status nào
         vehicle.IsActive = false;
         vehicle.Status = ListingStatus.Hidden;
         vehicle.UpdatedDate = DateTime.UtcNow;

@@ -48,7 +48,12 @@
             <h2 class="market-section__title">Tin xe điện đã duyệt</h2>
             <p class="text-muted mb-0 small">Các tin đang hiển thị công khai cho khách hàng.</p>
         </div>
-        <span class="market-section__count">@Model.ApprovedVehicles.Count tin</span>
+        <div class="d-flex align-items-center gap-3">
+            <span class="market-section__count">@Model.TotalVehicleCount tin</span>
+            <a class="btn btn-outline-primary" asp-page="/VehicleListings/Browse">
+                <i class="bi bi-arrow-right"></i> Xem tất cả
+            </a>
+        </div>
     </div>
 
     @if (Model.ApprovedVehicles.Any())
@@ -90,7 +95,10 @@
                         </dl>
                     </div>
                     <div class="market-card__footer">
-                        <a class="btn btn-chip btn-chip-neutral" asp-page="/VehicleListings/Details" asp-route-id="@vehicle.VehicleId">Xem chi tiết</a>
+                        <a class="btn btn-chip btn-chip-neutral" 
+                           asp-page="/VehicleListings/Details" 
+                           asp-route-id="@vehicle.VehicleId"
+                           asp-route-returnUrl="/">Xem chi tiết</a>
                     </div>
                 </article>
             }
@@ -108,7 +116,12 @@
             <h2 class="market-section__title">Tin pin đã duyệt</h2>
             <p class="text-muted mb-0 small">Các nguồn pin khả dụng để bạn liên hệ nhanh.</p>
         </div>
-        <span class="market-section__count">@Model.ApprovedBatteries.Count tin</span>
+        <div class="d-flex align-items-center gap-3">
+            <span class="market-section__count">@Model.TotalBatteryCount tin</span>
+            <a class="btn btn-outline-primary" asp-page="/BatteryListings/Browse">
+                <i class="bi bi-arrow-right"></i> Xem tất cả
+            </a>
+        </div>
     </div>
 
     @if (Model.ApprovedBatteries.Any())
@@ -150,7 +163,10 @@
                         </dl>
                     </div>
                     <div class="market-card__footer">
-                        <a class="btn btn-chip btn-chip-neutral" asp-page="/BatteryListings/Details" asp-route-id="@battery.BatteryId">Xem chi tiết</a>
+                        <a class="btn btn-chip btn-chip-neutral" 
+                           asp-page="/BatteryListings/Details" 
+                           asp-route-id="@battery.BatteryId"
+                           asp-route-returnUrl="/">Xem chi tiết</a>
                     </div>
                 </article>
             }

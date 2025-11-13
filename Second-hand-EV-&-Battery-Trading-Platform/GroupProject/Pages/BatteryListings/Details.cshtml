@@ -1,12 +1,15 @@
 @page "{id:int}"
 @model GroupProject.Pages.BatteryListings.DetailsModel
+@using BLL.Constants
 @{
     ViewData["Title"] = "Chi tiết tin pin";
 }
 
 <div class="page-header">
     <h1>Chi tiết tin pin</h1>
-    <a class="btn btn-link" asp-page="@(Model.IsOwner ? "Index" : "/Index")">Quay lại danh sách</a>
+    <a class="btn btn-link" href="@Model.ReturnUrl">
+        <i class="bi bi-arrow-left"></i> Quay lại danh sách
+    </a>
 </div>
 
 @if (!string.IsNullOrEmpty(Model.ErrorMessage))
@@ -101,7 +104,7 @@
         </div>
     </div>
 
-    <div class="card-modern">
+    <div class="card-modern mb-4">
         <h3 class="h5 mb-3">Mô tả chi tiết</h3>
         <p class="mb-4">@(string.IsNullOrWhiteSpace(Model.Listing.Description)
             ? "Người đăng chưa cung cấp mô tả."
@@ -115,6 +118,73 @@
             </div>
         }
     </div>
+
+    @* Nút Mua ngay cho buyer *@
+    @if (Model.CanPurchase)
+    {
+        <div class="card-modern mb-4">
+            <div class="text-center">
+                <h3 class="h4 mb-3">@Model.Listing.Price.ToString("N0") đ</h3>
+                <a asp-page="/Buyer/Orders/Create" 
+                   asp-route-itemType="Battery" 
+                   asp-route-itemId="@Model.Listing.BatteryId" 
+                   class="btn btn-primary btn-lg">
+                    <i class="bi bi-cart-plus"></i> Mua ngay
+                </a>
+            </div>
+        </div>
+    }
+
+    @* Reviews của seller *@
+    @if (Model.SellerReviews.Any())
+    {
+        <div class="card-modern mb-4">
+            <h3 class="h5 mb-3">
+                <i class="bi bi-star-fill text-warning"></i> 
+                Đánh giá của người bán (@Model.SellerReviews.Count)
+            </h3>
+            <div class="review-list">
+                @foreach (var review in Model.SellerReviews)
+                {
+                    <div class="review-item border-bottom pb-3 mb-3">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <div>
+                                <strong>@(review.Reviewer?.FullName ?? "Người dùng ẩn danh")</strong>
+                                <div class="text-muted small">
+                                    @review.CreatedDate?.ToString("dd/MM/yyyy HH:mm")
+                                </div>
+                            </div>
+                            <div class="rating">
+                                @for (int i = 1; i <= 5; i++)
+                                {
+                                    if (i <= review.Rating)
+                                    {
+                                        <span class="text-warning"><i class="bi bi-star-fill"></i></span>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted"><i class="bi bi-star"></i></span>
+                                    }
+                                }
+                            </div>
+                        </div>
+                        @if (!string.IsNullOrWhiteSpace(review.Comment))
+                        {
+                            <p class="mb-0">@review.Comment</p>
+                        }
+                    </div>
+                }
+            </div>
+        </div>
+    }
+    else if (Model.Listing.Status == ListingStatus.Approved)
+    {
+        <div class="card-modern mb-4">
+            <div class="text-muted text-center py-3">
+                <i class="bi bi-star"></i> Chưa có đánh giá nào cho người bán này.
+            </div>
+        </div>
+    }
 }
 else if (string.IsNullOrEmpty(Model.ErrorMessage))
 {
