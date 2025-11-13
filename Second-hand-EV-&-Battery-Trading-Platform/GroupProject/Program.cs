@@ -17,6 +17,8 @@ builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IVehicleListingService, VehicleListingService>();
 builder.Services.AddScoped<IBatteryListingService, BatteryListingService>();
 builder.Services.AddAdminTransactionService(builder.Configuration);
+builder.Services.AddScoped<IAdminReviewService, AdminReviewService>();
+
 
 var app = builder.Build();
 

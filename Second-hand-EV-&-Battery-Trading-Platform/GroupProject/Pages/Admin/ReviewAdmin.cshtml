@@ -1,0 +1,53 @@
+﻿@page
+@model GroupProject.Pages.Admin.ReviewAdminModel
+@{
+    ViewData["Title"] = "Quản lý đánh giá (Admin)";
+    ViewData["FullWidth"] = true;
+}
+
+<div class="page-header">
+    <h1>⭐ Quản lý đánh giá</h1>
+</div>
+
+<div class="listing-table-card">
+    <div class="table-responsive">
+        @if (Model.Reviews == null || !Model.Reviews.Any())
+        {
+            <div class="empty-state text-center py-4">
+                <strong>Chưa có đánh giá nào.</strong>
+            </div>
+        }
+        else
+        {
+            <table class="table align-middle table-striped">
+                <thead class="table-light">
+                    <tr>
+                        <th>Review ID</th>
+                        <th>Đơn hàng</th>
+                        <th>Người đánh giá</th>
+                        <th>Người được đánh giá</th>
+                        <th>Điểm</th>
+                        <th>Bình luận</th>
+                        <th>Ngày tạo</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var r in Model.Reviews)
+                    {
+                        <tr>
+                            <td>@r.ReviewId</td>
+                            <td>@r.OrderId</td>
+                            <td>@r.ReviewerName</td>
+                            <td>@r.ReviewedUserName</td>
+                            <td>
+                                <span class="text-warning fw-bold">@r.Rating ★</span>
+                            </td>
+                            <td>@r.Comment</td>
+                            <td>@r.CreatedDate?.ToString("dd/MM/yyyy")</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+    </div>
+</div>
