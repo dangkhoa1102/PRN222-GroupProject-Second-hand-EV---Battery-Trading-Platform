@@ -1,6 +1,7 @@
 using BLL.DTOs;
 using DAL.Models;
 using DAL.Repository;
+using Microsoft.EntityFrameworkCore;
 
 namespace BLL.Services;
 
@@ -255,6 +256,42 @@ public class OrderService : IOrderService
         await buyerRepository.ReactivateListingAsync(orderId);
 
         return true;
+    }
+
+    public async Task<IReadOnlyList<OrderAutoCancelResultDto>> AutoCancelDeliveredOrdersAsync(TimeSpan deliveryGracePeriod, CancellationToken cancellationToken = default)
+    {
+        await using var context = new EVTradingPlatformContext();
+
+        var cutoffTime = DateTime.Now.Subtract(deliveryGracePeriod);
+        var ordersToCancel = await context.Orders
+            .Where(o => o.OrderStatus == "Delivered"
+                        && o.DeliveryDate.HasValue
+                        && o.DeliveryDate.Value <= cutoffTime)
+            .ToListAsync(cancellationToken);
+
+        if (!ordersToCancel.Any())
+        {
+            return Array.Empty<OrderAutoCancelResultDto>();
+        }
+
+        foreach (var order in ordersToCancel)
+        {
+            order.OrderStatus = "Cancelled";
+            order.CancellationReason = "Người mua không xác nhận nhận hàng đúng hạn";
+        }
+
+        await context.SaveChangesAsync(cancellationToken);
+
+        return ordersToCancel
+            .Select(order => new OrderAutoCancelResultDto
+            {
+                OrderId = order.OrderId,
+                SellerId = order.SellerId,
+                BuyerId = order.BuyerId,
+                DeliveryDate = order.DeliveryDate,
+                CancelledAt = DateTime.Now
+            })
+            .ToList();
     }
 }
 

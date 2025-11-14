@@ -70,7 +70,13 @@ function initSignalR() {
     connection.on("ListingUpdated", (data) => {
         console.log("ListingUpdated received:", data);
         showNotification(data.message, "info");
-        reloadIfOnListingPage();
+    });
+
+    // Xử lý Listing Public Updated (broadcast cho buyer đang xem)
+    connection.on("ListingPublicUpdated", (data) => {
+        console.log("ListingPublicUpdated received:", data);
+        const listingType = data && data.listingType ? data.listingType : null;
+        reloadIfOnListingPage(listingType);
     });
 
     // Xử lý Listing Hidden
@@ -139,18 +145,36 @@ function initSignalR() {
     });
 
     // Helper function để reload nếu đang ở trang quản lý tin đăng
-    function reloadIfOnListingPage() {
+    function reloadIfOnListingPage(listingType) {
         const path = window.location.pathname.toLowerCase();
-        // Reload cho tất cả các trang liên quan đến listings
-        if (path.includes("/vehiclelistings") || 
+        const normalizedType = (listingType || "").toLowerCase();
+        const pathMatchesListingPage = path.includes("/vehiclelistings") || 
             path.includes("/batterylistings") ||
             path.includes("/vehicle") ||
-            path.includes("/battery")) {
-            console.log("SignalR: Reloading listing page:", path);
-            setTimeout(() => {
-                window.location.reload();
-            }, 1500);
+            path.includes("/battery");
+        const manualOptIn = typeof window.enableListingRealtimeReload !== "undefined"
+            ? Boolean(window.enableListingRealtimeReload)
+            : false;
+
+        if (!pathMatchesListingPage && !manualOptIn) {
+            return;
         }
+
+        let typeFilters = [];
+        if (Array.isArray(window.listingRealtimeTypes)) {
+            typeFilters = window.listingRealtimeTypes
+                .map(t => (t || "").toString().toLowerCase())
+                .filter(Boolean);
+        }
+
+        if (typeFilters.length > 0 && normalizedType && !typeFilters.includes(normalizedType)) {
+            return;
+        }
+
+        console.log("SignalR: Reloading listing page:", path, "type:", listingType);
+        setTimeout(() => {
+            window.location.reload();
+        }, 1500);
     }
 
     // Xử lý New Review

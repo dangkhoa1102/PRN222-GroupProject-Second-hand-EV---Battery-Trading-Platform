@@ -72,11 +72,6 @@ public class VehicleListingService : IVehicleListingService
             return ListingActionResultDto.Failure("Bạn không có quyền chỉnh sửa tin đăng này.");
         }
 
-        if (vehicle.Status == ListingStatus.Approved)
-        {
-            return ListingActionResultDto.Failure("Tin đăng đã được duyệt, không thể chỉnh sửa trực tiếp.");
-        }
-
         if (vehicle.Status == ListingStatus.Rejected)
         {
             return ListingActionResultDto.Failure("Tin đăng đã bị từ chối, vui lòng tạo tin mới.");

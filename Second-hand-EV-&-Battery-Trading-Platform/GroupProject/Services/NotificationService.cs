@@ -129,23 +129,27 @@ public class NotificationService : INotificationService
 
     public async Task NotifyListingUpdatedAsync(int listingId, string listingType, int sellerId, string listingName)
     {
-        // Gửi cho seller group
-        await _hubContext.Clients.Group($"seller_{sellerId}").SendAsync("ListingUpdated", new
+        var ownerPayload = new
         {
             ListingId = listingId,
             ListingType = listingType,
             ListingName = listingName,
             Message = $"Tin đăng \"{listingName}\" đã được cập nhật",
             Timestamp = DateTime.Now
-        });
+        };
+
+        // Gửi cho seller group
+        await _hubContext.Clients.Group($"seller_{sellerId}").SendAsync("ListingUpdated", ownerPayload);
         
         // Cũng gửi cho user group
-        await _hubContext.Clients.Group($"user_{sellerId}").SendAsync("ListingUpdated", new
+        await _hubContext.Clients.Group($"user_{sellerId}").SendAsync("ListingUpdated", ownerPayload);
+
+        // Gửi cho toàn bộ client để cập nhật realtime cho người mua
+        await _hubContext.Clients.All.SendAsync("ListingPublicUpdated", new
         {
             ListingId = listingId,
             ListingType = listingType,
             ListingName = listingName,
-            Message = $"Tin đăng \"{listingName}\" đã được cập nhật",
             Timestamp = DateTime.Now
         });
     }

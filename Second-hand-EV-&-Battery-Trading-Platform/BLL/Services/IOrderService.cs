@@ -11,5 +11,6 @@ public interface IOrderService
     Task<bool> CompleteShipmentAsync(int orderId, int sellerId, CancellationToken cancellationToken = default);
     Task<bool> RejectOrderAsync(int orderId, int sellerId, string? reason, CancellationToken cancellationToken = default);
     Task<bool> CancelOrderAsync(int orderId, int sellerId, string? reason, CancellationToken cancellationToken = default);
+    Task<IReadOnlyList<OrderAutoCancelResultDto>> AutoCancelDeliveredOrdersAsync(TimeSpan deliveryGracePeriod, CancellationToken cancellationToken = default);
 }
 

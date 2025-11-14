@@ -1,4 +1,5 @@
 using System.Globalization;
+using BLL.Constants;
 using BLL.DTOs;
 using BLL.Services;
 using GroupProject.Services;
@@ -35,6 +36,8 @@ public class UpsertModel : PageModel
     public int? Id { get; set; }
 
     public bool IsEdit => Id.HasValue;
+    public string? CurrentStatus { get; private set; }
+    public bool IsApprovedListing => string.Equals(CurrentStatus, ListingStatus.Approved, StringComparison.OrdinalIgnoreCase);
 
     public string? ErrorMessage { get; private set; }
 
@@ -54,6 +57,7 @@ public class UpsertModel : PageModel
                 return NotFound();
             }
 
+            CurrentStatus = existing.Status;
             Input = new VehicleUpsertDto
             {
                 Brand = existing.Brand,
@@ -82,6 +86,17 @@ public class UpsertModel : PageModel
         if (!sellerId.HasValue)
         {
             return RedirectToPage("/Account/Login");
+        }
+
+        if (IsEdit && Id.HasValue)
+        {
+            var existing = await _vehicleListingService.GetListingDetailAsync(Id.Value);
+            if (existing == null || existing.SellerId != sellerId.Value)
+            {
+                return NotFound();
+            }
+
+            CurrentStatus = existing.Status;
         }
 
         if (string.IsNullOrWhiteSpace(PriceInput))

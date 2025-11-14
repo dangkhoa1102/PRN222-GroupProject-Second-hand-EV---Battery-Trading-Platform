@@ -27,7 +27,7 @@ public class IndexModel : PageModel
         status is ListingStatus.Draft or ListingStatus.NeedsRevision;
 
     public bool CanEdit(string status) =>
-        status is ListingStatus.Draft or ListingStatus.NeedsRevision;
+        status is ListingStatus.Draft or ListingStatus.NeedsRevision or ListingStatus.Approved;
 
     public bool CanDelete(string status) =>
         status is ListingStatus.Draft or ListingStatus.Hidden;

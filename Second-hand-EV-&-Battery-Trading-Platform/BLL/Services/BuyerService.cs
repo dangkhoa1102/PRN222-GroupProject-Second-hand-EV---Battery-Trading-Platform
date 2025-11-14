@@ -85,18 +85,44 @@ namespace BLL.Services
             }
         }
 
-        public async Task<IEnumerable<Review>> GetReview(int reviewedUser)
+        public async Task<IEnumerable<ReviewDto>> GetReview(int reviewedUser)
         {
             try
             {
                 var repo = new BuyerRepository();
                 var result = await repo.GetReview(reviewedUser);
-                return result ?? new List<Review>();
+
+                if (result == null)
+                {
+                    return new List<ReviewDto>();
+                }
+
+                return result.Select(review => new ReviewDto
+                {
+                    ReviewId = review.ReviewId,
+                    OrderId = review.OrderId,
+                    ReviewerId = review.ReviewerId,
+                    ReviewerName = review.Reviewer?.FullName ?? "Người dùng ẩn danh",
+                    ReviewerEmail = review.Reviewer?.Email,
+                    ReviewedUserId = review.ReviewedUserId,
+                    ReviewedUserName = review.ReviewedUser?.FullName ?? string.Empty,
+                    Rating = review.Rating,
+                    Comment = review.Comment,
+                    CreatedDate = review.CreatedDate,
+                    ProductType = review.Order?.VehicleOrder != null ? "Vehicle" :
+                        review.Order?.BatteryOrder != null ? "Battery" : null,
+                    ProductName = review.Order?.VehicleOrder != null
+                        ? $"{review.Order.VehicleOrder.Vehicle?.Brand} {review.Order.VehicleOrder.Vehicle?.Model}"
+                        : review.Order?.BatteryOrder != null
+                            ? $"{review.Order.BatteryOrder.Battery?.Brand} {review.Order.BatteryOrder.Battery?.BatteryType}"
+                            : null,
+                    ProductId = review.Order?.VehicleOrder?.VehicleId ?? review.Order?.BatteryOrder?.BatteryId
+                }).ToList();
             }
             catch
             {
                 // Trả về empty list nếu có lỗi thay vì throw exception
-                return new List<Review>();
+                return new List<ReviewDto>();
             }
         }
 

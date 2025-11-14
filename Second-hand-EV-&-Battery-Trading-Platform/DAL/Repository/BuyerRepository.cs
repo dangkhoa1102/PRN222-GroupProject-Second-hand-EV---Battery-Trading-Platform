@@ -145,6 +145,13 @@ namespace DAL.Repository
             await using var context = new EVTradingPlatformContext();
             var rs = await context.Reviews
                 .Include(r => r.Reviewer)
+                .Include(r => r.ReviewedUser)
+                .Include(r => r.Order)
+                    .ThenInclude(o => o.VehicleOrder)
+                        .ThenInclude(vo => vo.Vehicle)
+                .Include(r => r.Order)
+                    .ThenInclude(o => o.BatteryOrder)
+                        .ThenInclude(bo => bo.Battery)
                 .Where(r => r.ReviewedUserId == reviewedUser)
                 .OrderByDescending(r => r.CreatedDate)
                 .ToListAsync();
