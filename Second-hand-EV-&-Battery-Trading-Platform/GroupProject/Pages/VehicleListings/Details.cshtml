@@ -143,7 +143,7 @@
                     <div class="review-item border-bottom pb-3 mb-3">
                         <div class="d-flex justify-content-between align-items-start mb-2">
                             <div>
-                                <strong>@(review.Reviewer?.FullName ?? "Người dùng ẩn danh")</strong>
+                                <strong>@(string.IsNullOrWhiteSpace(review.ReviewerName) ? "Người dùng ẩn danh" : review.ReviewerName)</strong>
                                 <div class="text-muted small">
                                     @review.CreatedDate?.ToString("dd/MM/yyyy HH:mm")
                                 </div>

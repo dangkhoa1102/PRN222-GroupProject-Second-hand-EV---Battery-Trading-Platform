@@ -1,8 +1,6 @@
 using BLL.Constants;
 using BLL.DTOs;
 using BLL.Services;
-using DAL.Models;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 
@@ -22,7 +20,7 @@ public class DetailsModel : PageModel
     }
 
     public BatteryListingDetailDto? Listing { get; private set; }
-    public List<Review> SellerReviews { get; private set; } = new();
+    public List<ReviewDto> SellerReviews { get; private set; } = new();
     public string? ErrorMessage { get; private set; }
     public bool IsOwner { get; private set; }
     public bool IsBuyer { get; private set; }
@@ -81,7 +79,7 @@ public class DetailsModel : PageModel
             catch
             {
                 // Nếu không có reviews, để list rỗng
-                SellerReviews = new List<Review>();
+                SellerReviews = new List<ReviewDto>();
             }
         }
 

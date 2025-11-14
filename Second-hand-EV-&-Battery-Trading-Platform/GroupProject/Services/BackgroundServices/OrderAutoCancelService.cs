@@ -1,10 +1,4 @@
-using DAL.Models;
-using DAL.Repository;
-using GroupProject.Services;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
+using BLL.Services;
 
 namespace GroupProject.Services.BackgroundServices;
 
@@ -55,67 +49,42 @@ public class OrderAutoCancelService : BackgroundService
     {
         try
         {
-            await using var context = new EVTradingPlatformContext();
-            var orderRepository = new OrderRepository(context);
+            using var scope = _serviceProvider.CreateScope();
+            var orderService = scope.ServiceProvider.GetRequiredService<IOrderService>();
+            var notificationService = scope.ServiceProvider.GetRequiredService<INotificationService>();
 
-            // Lấy tất cả các đơn hàng có trạng thái "Delivered" (seller đã giao hàng xong)
-            // và đã được delivered hơn 5 phút nhưng buyer chưa xác nhận nhận hàng
-            var cutoffTime = DateTime.Now.Subtract(_cancelAfterHours);
-            var ordersToCancel = await context.Orders
-                .Where(o => o.OrderStatus == "Delivered" 
-                         && o.DeliveryDate.HasValue 
-                         && o.DeliveryDate.Value <= cutoffTime)
-                .ToListAsync(cancellationToken);
+            var cancelledOrders = await orderService.AutoCancelDeliveredOrdersAsync(_cancelAfterHours, cancellationToken);
 
-            if (!ordersToCancel.Any())
+            if (!cancelledOrders.Any())
             {
                 _logger.LogDebug("No orders found to auto-cancel.");
                 return;
             }
 
-            var cancelledCount = 0;
-            var now = DateTime.Now;
-
-            foreach (var order in ordersToCancel)
+            foreach (var order in cancelledOrders)
             {
                 try
                 {
-                    // Tự động hủy đơn hàng
-                    order.OrderStatus = "Cancelled";
-                    order.CancellationReason = "Người mua không xác nhận nhận hàng sau 5 phút";
+                    await notificationService.NotifyOrderUpdateAsync(
+                        order.OrderId,
+                        order.SellerId,
+                        order.BuyerId,
+                        "Đơn hàng đã bị hủy tự động: Người mua không xác nhận nhận hàng sau thời gian quy định.",
+                        "Cancelled");
 
-                    await orderRepository.UpdateOrderAsync(order);
-                    await orderRepository.SaveChangesAsync(cancellationToken);
-
-                    // Gửi SignalR notification
-                    using (var scope = _serviceProvider.CreateScope())
-                    {
-                        var notificationService = scope.ServiceProvider.GetRequiredService<INotificationService>();
-                        await notificationService.NotifyOrderUpdateAsync(
-                            order.OrderId, 
-                            order.SellerId, 
-                            order.BuyerId, 
-                            "Đơn hàng đã bị hủy tự động: Người mua không xác nhận nhận hàng sau 5 phút", 
-                            "Cancelled");
-                    }
-
-                    cancelledCount++;
                     _logger.LogInformation(
                         "Order {OrderId} has been auto-cancelled. Delivered at: {DeliveredDate}, Cancelled at: {CancelledDate}",
                         order.OrderId,
                         order.DeliveryDate,
-                        now);
+                        order.CancelledAt);
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogError(ex, "Error occurred while cancelling order {OrderId}.", order.OrderId);
+                    _logger.LogError(ex, "Error occurred while sending notification for cancelled order {OrderId}.", order.OrderId);
                 }
             }
 
-            if (cancelledCount > 0)
-            {
-                _logger.LogInformation("Auto-cancelled {Count} orders that were not confirmed by buyer within {Minutes} minutes.", cancelledCount, _cancelAfterHours.TotalMinutes);
-            }
+            _logger.LogInformation("Auto-cancelled {Count} orders that were not confirmed by buyer within {Minutes} minutes.", cancelledOrders.Count, _cancelAfterHours.TotalMinutes);
         }
         catch (Exception ex)
         {

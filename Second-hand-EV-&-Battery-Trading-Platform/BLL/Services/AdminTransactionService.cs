@@ -78,5 +78,72 @@ namespace BLL.Services
 
             return await query.OrderByDescending(x => x.CompletedDate).ToListAsync();
         }
+
+        public async Task<AdminDashboardStatsDto> GetDashboardStatsAsync(int months = 6)
+        {
+            months = Math.Clamp(months, 1, 24);
+
+            var totalOrders = await _context.Orders.CountAsync();
+            var pendingOrders = await _context.Orders.CountAsync(o => o.OrderStatus == "Pending");
+            var completedOrders = await _context.Orders.CountAsync(o => o.OrderStatus == "Completed");
+            var cancelledOrders = await _context.Orders.CountAsync(o => o.OrderStatus == "Cancelled");
+
+            var revenueStatuses = new[] { "Completed", "Delivered", "Paid", "Confirm", "Confirmed" };
+            var totalRevenue = await _context.Orders
+                .Where(o => revenueStatuses.Contains(o.OrderStatus))
+                .SumAsync(o => (decimal?)o.TotalAmount) ?? 0m;
+            var orderStatusFilter = new[] { "Completed", "Pending", "Cancelled" };
+
+            var endOfWindow = new DateTime(DateTime.Now.Year, DateTime.Now.Month, 1);
+            var startOfWindow = endOfWindow.AddMonths(-(months - 1));
+
+            var monthlyRaw = await _context.Orders
+                .Where(o =>
+                    o.CreatedDate.HasValue &&
+                    o.CreatedDate.Value >= startOfWindow &&
+                    o.CreatedDate.Value < endOfWindow.AddMonths(1) &&
+                    revenueStatuses.Contains(o.OrderStatus))
+                .GroupBy(o => new { o.CreatedDate!.Value.Year, o.CreatedDate!.Value.Month })
+                .Select(g => new
+                {
+                    g.Key.Year,
+                    g.Key.Month,
+                    Count = g.Count(),
+                    Revenue = g.Sum(x => x.TotalAmount)
+                })
+                .ToListAsync();
+
+            var trendPoints = new List<AdminTrendPointDto>();
+            for (var cursor = startOfWindow; cursor <= endOfWindow; cursor = cursor.AddMonths(1))
+            {
+                var match = monthlyRaw.FirstOrDefault(m => m.Year == cursor.Year && m.Month == cursor.Month);
+                trendPoints.Add(new AdminTrendPointDto
+                {
+                    Year = cursor.Year,
+                    Month = cursor.Month,
+                    OrderCount = match?.Count ?? 0,
+                    Revenue = match?.Revenue ?? 0m
+                });
+            }
+
+            return new AdminDashboardStatsDto
+            {
+                TotalOrders = totalOrders,
+                PendingOrders = pendingOrders,
+                CompletedOrders = completedOrders,
+                CancelledOrders = cancelledOrders,
+                TotalRevenue = totalRevenue,
+                MonthlyTrends = trendPoints,
+                StatusBreakdown = await _context.Orders
+                    .Where(o => orderStatusFilter.Contains(o.OrderStatus))
+                    .GroupBy(o => o.OrderStatus)
+                    .Select(g => new AdminStatusBreakdownDto
+                    {
+                        Status = g.Key,
+                        Count = g.Count()
+                    })
+                    .ToListAsync()
+            };
+        }
     }
 }
