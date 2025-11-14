@@ -236,4 +236,39 @@ Tất cả các chức năng quan trọng trong dự án đã được tích h�
 - ✅ Background Services: 100% coverage
 
 **Dự án đã hoàn chỉnh với SignalR real-time cho TẤT CẢ chức năng!**
-
+## Tài khoản đăng Nhập:
+### Customer:
+### Email :
+customer1@gmail.com
+customer2@gmail.com
+khoa@gmail.com
+sumoime@gmail.com
+evbuyer01@gmail.com
+evbuyer02@gmail.com
+evbuyer03@gmail.com
+evbuyer04@gmail.com
+evbuyer05@gmail.com
+evseller01@gmail.com
+evseller02@gmail.com
+evseller03@gmail.com
+evseller04@gmail.com
+evseller05@gmail.com
+staff01@evtrade.com
+staff02@evtrade.com
+staff03@evtrade.com
+staff04@evtrade.com
+staff05@evtrade.com
+evbuyer06@gmail.com
+evbuyer07@gmail.com
+evbuyer08@gmail.com
+evbuyer09@gmail.com
+evbuyer10@gmail.com
+evseller06@gmail.com
+evseller07@gmail.com
+evseller08@gmail.com
+evseller09@gmail.com
+evseller10@gmail.com
+### Password: 123
+## Admin :
+email: admin@gmail.com
+password: 123
